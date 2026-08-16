@@ -1,0 +1,10 @@
+{
+  "description": "This user-friendly home tax reminder system helps gram panchayat users manage due dates by sending bilingual reminders and storing relevant data efficiently.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
