@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Import from Word — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Import from Word Document</h1>
+      </header>
+
+      <div class="page-content">
+        <div class="card mb-24">
+          <div class="flex-center" style="justify-content: space-between; margin-bottom: 12px;">
+            <div>
+              <h2 class="fs-14 fw-600">📋 Paste Text from Word / Document</h2>
+              <div class="fs-12 text-muted mt-4">Copy multiple resident blocks separated by a blank line. Supports English & Marathi field names.</div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-load-sample">Load Sample</button>
+          </div>
+
+          <textarea id="import-text" class="form-textarea" style="min-height: 160px; font-family: monospace; font-size: 13px;" placeholder="Name: Ramesh Patil&#10;Property ID: GP/2024/001&#10;Ward: Ward 1&#10;Phone: 9876543210&#10;Amount: 2500&#10;Address: Plot 12, Main Road&#10;&#10;Name: Sunita Deshmukh&#10;Property ID: GP/2024/002&#10;Ward: Ward 2&#10;Mobile: 9123456789&#10;Tax Amount: ₹1,800"></textarea>
+
+          <div class="flex gap-10 mt-16">
+            <button type="button" class="btn btn-primary" id="btn-parse">🔍 Parse & Review</button>
+            <button type="button" class="btn btn-secondary" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <!-- Parse Result Review Section -->
+        <div id="review-section" style="display:none;">
+          <div class="stat-grid stat-grid-3 mb-20">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-total-parsed">0</div>
+              <div class="stat-label">Total Blocks Parsed</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-value" id="stat-new-count">0</div>
+              <div class="stat-label">New Records (Ready to Insert)</div>
+            </div>
+            <div class="stat-card amber">
+              <div class="stat-value" id="stat-dup-count">0</div>
+              <div class="stat-label">Duplicates (Needs Review)</div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="tab-bar">
+            <button type="button" class="tab-btn active" id="tab-btn-new">New Records (<span id="tab-new-badge">0</span>)</button>
+            <button type="button" class="tab-btn" id="tab-btn-dup">Duplicate Records (<span id="tab-dup-badge">0</span>)</button>
+          </div>
+
+          <!-- Tab 1: New Records -->
+          <div id="tab-content-new">
+            <div class="card mb-16 flex-center" style="justify-content: space-between; background: var(--success-light); border-color: var(--success-border);">
+              <div>
+                <div class="fw-600 text-success fs-13">✓ These records have unique Property IDs and are ready to be imported.</div>
+                <div class="fs-12 text-muted mt-2">Duplicates are never auto-inserted.</div>
+              </div>
+              <button type="button" class="btn btn-success" id="btn-confirm-import">✓ Confirm Import All New Records</button>
+            </div>
+            <div id="new-records-list"></div>
+          </div>
+
+          <!-- Tab 2: Duplicate Records -->
+          <div id="tab-content-dup" style="display:none;">
+            <div class="card mb-16" style="background: var(--warn-light); border-color: var(--warn-border);">
+              <div class="fw-600 text-warn fs-13">⚠ Existing Property IDs Found</div>
+              <div class="fs-12 text-muted mt-2">These records match existing property IDs in your database. You can review and choose to overwrite/merge each one individually.</div>
+            </div>
+            <div id="dup-records-list"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/import_word.js"></script>
+</body>
+</html>

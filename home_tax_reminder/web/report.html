@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tax Report — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+  <style>
+    @media print {
+      .sidebar, .page-header button, .filter-box, .tab-bar, .no-print { display: none !important; }
+      .app-shell { display: block !important; height: auto !important; }
+      .main-area, .page-content { overflow: visible !important; height: auto !important; padding: 0 !important; }
+      .card, .table-wrap { border: 1px solid #000 !important; box-shadow: none !important; }
+      body { background: #fff !important; color: #000 !important; font-size: 11pt !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Tax Collection & Dues Report</h1>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨 Print / Export PDF</button>
+      </header>
+
+      <div class="page-content">
+        <!-- Filter Box -->
+        <div class="card mb-20 filter-box">
+          <div class="flex-center" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div class="flex-center gap-10" style="flex-wrap: wrap;">
+              <div class="tab-bar mb-0" style="margin-bottom: 0;">
+                <button type="button" class="tab-btn active" id="btn-p-yearly">Yearly</button>
+                <button type="button" class="tab-btn" id="btn-p-monthly">Monthly</button>
+                <button type="button" class="tab-btn" id="btn-p-daily">Daily</button>
+                <button type="button" class="tab-btn" id="btn-p-all">All Time</button>
+              </div>
+
+              <div id="period-selector-container">
+                <select id="sel-year" class="form-select" style="width: 120px;">
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                  <option value="2026" selected>2026</option>
+                  <option value="2027">2027</option>
+                </select>
+                <input type="month" id="input-month" class="form-input" style="width: 160px; display:none;" value="2026-03">
+                <input type="date" id="input-date" class="form-input" style="width: 160px; display:none;">
+              </div>
+            </div>
+
+            <div class="flex-center gap-10">
+              <label class="fs-12 text-muted fw-600">Status:</label>
+              <select id="sel-status" class="form-select" style="width: 130px;">
+                <option value="all">All Records</option>
+                <option value="paid">Paid Only</option>
+                <option value="unpaid">Unpaid Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="stat-grid stat-grid-4 mb-24" id="report-kpi-grid">
+          <div class="stat-card green">
+            <div class="stat-value" id="rep-paid-sum">₹0</div>
+            <div class="stat-label">Paid Tax Collected (<span id="rep-paid-count">0</span>)</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-value" id="rep-unpaid-sum">₹0</div>
+            <div class="stat-label">Unpaid Base Tax (<span id="rep-unpaid-count">0</span>)</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-value" id="rep-penalty-sum">₹0</div>
+            <div class="stat-label">Accrued Penalties</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-value" id="rep-total-due">₹0</div>
+            <div class="stat-label">Total Outstanding Dues</div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-wrap">
+          <div style="padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div class="fw-600 fs-13" id="table-heading">Taxpayers Statement</div>
+            <div class="fs-11 text-muted" id="table-count">0 records</div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Property ID</th>
+                <th>Taxpayer Name</th>
+                <th>Ward</th>
+                <th>Status</th>
+                <th>Paid Date</th>
+                <th class="right">Base Tax</th>
+                <th class="right">Rebate</th>
+                <th class="right">Penalty</th>
+                <th class="right">Net Amount</th>
+              </tr>
+            </thead>
+            <tbody id="report-tbody">
+              <tr><td colspan="9" class="text-muted" style="text-align:center; padding: 24px;">Loading statement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/report.js"></script>
+</body>
+</html>

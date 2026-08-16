@@ -5,6 +5,8 @@ Run: python test_parse.py  (no DB, no Eel required)
 """
 
 import sys, json, pathlib
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
 from services.word_import_service import parse_text, check_duplicates

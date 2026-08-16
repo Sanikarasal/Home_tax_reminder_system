@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Settings & Configuration</h1>
+      </header>
+
+      <div class="page-content" style="max-width: 860px;">
+        <!-- TAB BAR FOR SETTINGS SECTIONS -->
+        <div class="tab-bar mb-20">
+          <button type="button" class="tab-btn active" id="tab-btn-cycle">📅 Tax Cycle & Cadence</button>
+          <button type="button" class="tab-btn" id="tab-btn-templates">💬 Message Templates</button>
+          <button type="button" class="tab-btn" id="tab-btn-office">🏛 Gram Panchayat Office Profile</button>
+        </div>
+
+        <!-- SECTION 1: Tax Cycle & Cadence -->
+        <div id="tab-content-cycle">
+          <form id="cycle-form">
+            <div class="card mb-20">
+              <h2 class="fs-14 fw-600 mb-16">Active Tax Cycle Setup</h2>
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label">Financial Year (FY)</label>
+                  <input type="text" id="fy_label" class="form-input" placeholder="2025-26" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Collection From Month</label>
+                  <select id="collection_from_month" class="form-select">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Collection To Month</label>
+                  <select id="collection_to_month" class="form-select">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3" selected>March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                  </select>
+                </div>
+                <div class="form-group full-width">
+                  <label class="form-label">Tax Payment Due Date *</label>
+                  <input type="date" id="due_date" class="form-input" style="max-width: 240px;" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Early Payment Rebate -->
+            <div class="card mb-20">
+              <div class="flex-center" style="justify-content: space-between; margin-bottom: 12px;">
+                <div>
+                  <h2 class="fs-14 fw-600">Early Payment Rebate (सूट)</h2>
+                  <div class="fs-12 text-muted mt-2">Discount given to taxpayers who pay before a specified cutoff date.</div>
+                </div>
+                <label class="flex-center gap-6" style="cursor: pointer;">
+                  <input type="checkbox" id="rebate_enabled" style="width: 16px; height: 16px;">
+                  <span class="fw-600 fs-12">Enable Rebate</span>
+                </label>
+              </div>
+
+              <div id="rebate-fields" style="display:none;" class="form-grid-2 mt-16">
+                <div class="form-group">
+                  <label class="form-label">Rebate Percentage (%)</label>
+                  <input type="number" id="rebate_percent" class="form-input" min="0" max="100" step="0.5" placeholder="5.0">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Rebate Deadline</label>
+                  <input type="date" id="rebate_deadline" class="form-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Late Payment Penalty -->
+            <div class="card mb-20">
+              <h2 class="fs-14 fw-600 mb-4">Late Payment Penalty (दंड)</h2>
+              <div class="fs-12 text-muted mb-16">Applies after the due date expires. Accrues per month late.</div>
+
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label">Penalty Type</label>
+                  <select id="penalty_type" class="form-select">
+                    <option value="flat">Flat Amount (₹ per month)</option>
+                    <option value="percent">Percentage (% per month)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Penalty Rate / Value</label>
+                  <input type="number" id="penalty_value" class="form-input" min="0" step="0.5" placeholder="50">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Grace Days After Due Date</label>
+                  <input type="number" id="penalty_start_days" class="form-input" min="0" placeholder="1">
+                </div>
+              </div>
+            </div>
+
+            <!-- Reminder Cadence Schedule -->
+            <div class="card mb-20">
+              <h2 class="fs-14 fw-600 mb-4">Automated Reminder Cadence</h2>
+              <div class="fs-12 text-muted mb-16">Days offset relative to the due date when automatic SMS/WhatsApp reminders will trigger.</div>
+
+              <div class="form-group mb-16">
+                <label class="form-label">Pre-Due Reminders (Days Before Due Date)</label>
+                <div class="pill-row" id="pre-cadence-container"></div>
+                <div class="flex gap-6 mt-8">
+                  <input type="number" id="input-add-pre" class="form-input" style="width: 100px;" placeholder="Days" min="1">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-add-pre">+ Add Offset</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Post-Due / Overdue Reminders (Days After Due Date)</label>
+                <div class="pill-row" id="post-cadence-container"></div>
+                <div class="flex gap-6 mt-8">
+                  <input type="number" id="input-add-post" class="form-input" style="width: 100px;" placeholder="Days" min="1">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-add-post">+ Add Offset</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-10 mb-24">
+              <button type="submit" class="btn btn-primary" id="btn-save-cycle">💾 Save Tax Cycle Configuration</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SECTION 2: Message Templates -->
+        <div id="tab-content-templates" style="display:none;">
+          <div class="card mb-20">
+            <div class="flex-center" style="justify-content: space-between; margin-bottom: 16px;">
+              <div>
+                <h2 class="fs-14 fw-600">Bilingual Reminder Templates</h2>
+                <div class="fs-12 text-muted mt-2">Available placeholders: <code>{name}</code>, <code>{due_date}</code>, <code>{amount}</code>, <code>{penalty_amount}</code>, <code>{rebate_deadline}</code>, <code>{rebate_percent}</code>, <code>{total}</code>, <code>{ward}</code>, <code>{property_id}</code>, <code>{gram_panchayat}</code></div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-templates">🔄 Reset to Defaults</button>
+            </div>
+
+            <div class="form-group mb-16">
+              <label class="form-label">Select Template Stage</label>
+              <div class="tab-bar mb-0">
+                <button type="button" class="tab-btn active" id="tmpl-tab-upcoming">Upcoming Due Date</button>
+                <button type="button" class="tab-btn" id="tmpl-tab-rebate">Early Rebate Offer</button>
+                <button type="button" class="tab-btn" id="tmpl-tab-overdue">Overdue Notice</button>
+                <button type="button" class="tab-btn" id="tmpl-tab-penalty">Penalty Applied</button>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">मराठी Template Body (Marathi)</label>
+                <textarea id="tmpl-body-mr" class="form-textarea" style="font-family: var(--font-mr); line-height: 1.6;"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">English Template Body</label>
+                <textarea id="tmpl-body-en" class="form-textarea" style="line-height: 1.6;"></textarea>
+              </div>
+            </div>
+
+            <div class="flex gap-10 mt-12">
+              <button type="button" class="btn btn-primary" id="btn-save-template">💾 Save Template Changes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Office Profile -->
+        <div id="tab-content-office" style="display:none;">
+          <form id="office-form">
+            <div class="card mb-20">
+              <h2 class="fs-14 fw-600 mb-16">Gram Panchayat Office Profile</h2>
+              <div class="form-group">
+                <label class="form-label">Gram Panchayat Office Name</label>
+                <input type="text" id="gp-name" class="form-input" placeholder="e.g. Gram Panchayat Shirsad" required>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Taluka</label>
+                  <input type="text" id="gp-taluka" class="form-input" placeholder="e.g. Vasai">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">District</label>
+                  <input type="text" id="gp-district" class="form-input" placeholder="e.g. Palghar">
+                </div>
+              </div>
+              <div class="flex gap-10 mt-16">
+                <button type="submit" class="btn btn-primary">💾 Save Office Profile</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>
