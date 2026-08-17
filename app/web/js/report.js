@@ -1,0 +1,135 @@
+/* ============================================================
+   report.js — Tax Report calculation & export logic
+   Matches Figma prototype report layout and metrics
+   ============================================================ */
+
+let currentPeriod = "yearly";
+let currentStatusFilter = "all";
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderSidebar("report");
+
+  const today = new Date().toISOString().split("T")[0];
+  const inputDate = document.getElementById("input-date");
+  const inputMonth = document.getElementById("input-month");
+  const selYear = document.getElementById("sel-year");
+
+  if (inputDate) inputDate.value = today;
+  if (inputMonth) inputMonth.value = today.substring(0, 7);
+  if (selYear) selYear.value = today.substring(0, 4);
+
+  // Period Tabs Click Handling
+  const pTabs = document.querySelectorAll("#period-tabs .tab-btn");
+  pTabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      pTabs.forEach(b => {
+        b.classList.remove("active");
+        b.style.background = "transparent";
+      });
+      btn.classList.add("active");
+      btn.style.background = "#fff";
+      setPeriod(btn.getAttribute("data-period") || "yearly");
+    });
+  });
+
+  // Status Filter Group Click Handling
+  const sBtns = document.querySelectorAll("#status-filter-group .tab-btn");
+  sBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      sBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentStatusFilter = btn.getAttribute("data-status") || "all";
+      loadReportData();
+    });
+  });
+
+  if (selYear) selYear.addEventListener("change", loadReportData);
+  if (inputMonth) inputMonth.addEventListener("change", loadReportData);
+  if (inputDate) inputDate.addEventListener("change", loadReportData);
+
+  loadReportData();
+});
+
+function setPeriod(p) {
+  currentPeriod = p;
+  const selYear = document.getElementById("sel-year");
+  const inMonth = document.getElementById("input-month");
+  const inDate  = document.getElementById("input-date");
+
+  if (selYear) selYear.style.display = (p === "yearly") ? "inline-block" : "none";
+  if (inMonth) inMonth.style.display = (p === "monthly") ? "inline-block" : "none";
+  if (inDate)  inDate.style.display  = (p === "daily") ? "inline-block" : "none";
+
+  loadReportData();
+}
+
+function getPeriodValue() {
+  if (currentPeriod === "yearly") return document.getElementById("sel-year")?.value || "";
+  if (currentPeriod === "monthly") return document.getElementById("input-month")?.value || "";
+  if (currentPeriod === "daily") return document.getElementById("input-date")?.value || "";
+  return "";
+}
+
+function loadReportData() {
+  const pVal = getPeriodValue();
+
+  eel.get_report_data(currentPeriod, pVal, currentStatusFilter)((res) => {
+    if (!res || !res.success) {
+      showToast("Error loading report: " + ((res && res.error) || "Failed"), "error");
+      return;
+    }
+
+    // Update KPI values
+    const paidSumEl = document.getElementById("rep-paid-sum");
+    const paidCountEl = document.getElementById("rep-paid-count");
+    const unpaidSumEl = document.getElementById("rep-unpaid-sum");
+    const unpaidCountEl = document.getElementById("rep-unpaid-count");
+    const penaltySumEl = document.getElementById("rep-penalty-sum");
+    const totalDueEl = document.getElementById("rep-total-due");
+
+    if (paidSumEl) paidSumEl.textContent = formatCurrency(res.paid_sum);
+    if (paidCountEl) paidCountEl.textContent = res.paid_count || 0;
+    if (unpaidSumEl) unpaidSumEl.textContent = formatCurrency(res.unpaid_sum);
+    if (unpaidCountEl) unpaidCountEl.textContent = res.unpaid_count || 0;
+    if (penaltySumEl) penaltySumEl.textContent = formatCurrency(res.penalty_sum);
+    if (totalDueEl) totalDueEl.textContent = formatCurrency(res.total_outstanding);
+
+    const recs = Array.isArray(res.records) ? res.records : [];
+    const tableCount = document.getElementById("table-count");
+    if (tableCount) tableCount.textContent = `Showing ${recs.length} record(s)`;
+
+    const headingEl = document.getElementById("table-heading");
+    if (headingEl) {
+      headingEl.textContent = `Taxpayers Statement — ${
+        currentPeriod === "yearly" ? "Year " + pVal :
+        currentPeriod === "monthly" ? "Month " + pVal :
+        currentPeriod === "daily" ? "Date " + pVal : "All Records"
+      }`;
+    }
+
+    const tbody = document.getElementById("report-tbody");
+    if (!tbody) return;
+
+    if (!recs.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-muted" style="text-align:center; padding: 48px;"><div style="font-size:32px;">📊</div><div style="margin-top:8px;">No records match the selected criteria.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = recs.map((r, idx) => {
+      const isPaid = r.payment_status === "paid";
+      const pen = r.penalty || 0;
+      const net = r.net_due || r.base_amount;
+      return `
+        <tr>
+          <td class="fw-600">${r.property_id}</td>
+          <td class="fw-500">${r.name}</td>
+          <td class="text-muted">${r.ward || '—'}</td>
+          <td>${statusBadge(r.payment_status)}</td>
+          <td class="right">${formatCurrency(r.base_amount)}</td>
+          <td class="right ${pen > 0 ? 'text-danger' : 'text-muted'}">${pen > 0 ? '+' + formatCurrency(pen) : '₹0'}</td>
+          <td class="right fw-700 ${isPaid ? 'text-success' : 'text-danger'}">${formatCurrency(net)}</td>
+        </tr>
+      `;
+    }).join("");
+  });
+}

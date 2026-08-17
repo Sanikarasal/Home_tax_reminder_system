@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Dashboard</h1>
+        <div class="header-right">
+          <div id="header-overdue-alert" class="header-overdue-tag" style="display:none;">⚠ <span id="header-overdue-count">0</span> Overdue Taxpayers</div>
+          <div class="header-meta" id="header-date"></div>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- Cycle Banner -->
+        <div class="cycle-banner" id="cycle-banner">Loading tax cycle...</div>
+
+        <!-- 4-Card KPI Grid -->
+        <div class="stat-grid stat-grid-4">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Records</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-value" id="stat-overdue">0</div>
+            <div class="stat-label">Overdue Taxpayers</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-value" id="stat-due-week">0</div>
+            <div class="stat-label">Due This Week</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-value" id="stat-paid">0</div>
+            <div class="stat-label">Paid Taxpayers</div>
+          </div>
+        </div>
+
+        <!-- 3-Card Secondary Summary -->
+        <div class="stat-grid stat-grid-3 mb-24">
+          <div class="stat-card red">
+            <div class="stat-kpi-sub text-danger">Pending (incl. penalty)</div>
+            <div class="stat-value fs-22 mt-4" style="color: #991B1B;" id="stat-pending-sum">₹0</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-kpi-sub text-warn">Total Penalty Accrued</div>
+            <div class="stat-value fs-22 mt-4" style="color: #9A3412;" id="stat-penalty">₹0</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-kpi-sub text-success">Collected</div>
+            <div class="stat-value fs-22 mt-4" style="color: #065F46;" id="stat-collected">₹0</div>
+          </div>
+        </div>
+
+        <!-- Daily Scheduler Banner -->
+        <div class="card card-sm mb-24 flex-center" style="justify-content: space-between;">
+          <div>
+            <div class="fw-600 fs-13">⏱ Daily Automatic Reminder Scheduler</div>
+            <div class="fs-12 text-muted mt-4" id="scheduler-status">Checking schedule...</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-trigger-job">⚡ Trigger Reminders Now</button>
+        </div>
+
+        <!-- Failed Sends Warning -->
+        <div id="failed-sends-container" style="display:none;" class="mb-24"></div>
+
+        <!-- Overdue Taxpayers List Section -->
+        <div id="overdue-section" style="display:none;" class="mb-28">
+          <div class="section-head">
+            <div class="section-head-title">
+              <h2>Overdue Taxpayers</h2>
+              <span class="section-count" id="overdue-count-badge">0</span>
+            </div>
+          </div>
+          <div id="overdue-list"></div>
+        </div>
+
+        <!-- Unpaid Taxpayers List -->
+        <div class="section-head">
+          <div class="section-head-title">
+            <h2>Unpaid Taxpayers Overview</h2>
+            <span class="section-count" id="unpaid-count-badge">0</span>
+          </div>
+        </div>
+        <div id="unpaid-list"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

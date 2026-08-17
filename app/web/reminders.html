@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reminders — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Reminders</h1>
+        <div class="header-right">
+          <button class="btn btn-primary btn-sm" id="btn-trigger-daily">⚡ Trigger Daily Check Now</button>
+          <div class="header-meta" id="header-date"></div>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- Cycle Banner -->
+        <div class="cycle-banner" id="cycle-banner">Loading tax cycle...</div>
+
+        <!-- Template Section Card -->
+        <div class="card mb-24">
+          <div class="flex-center" style="justify-content: space-between; margin-bottom: 12px;">
+            <div>
+              <div class="fw-600 fs-14" style="color: #1C1409;">🔔 Bilingual Reminder Template Settings & Sample Preview</div>
+              <div class="fs-11 text-light mt-2">Placeholders: <code>{name}</code>, <code>{due_date}</code>, <code>{amount}</code>, <code>{penalty_amount}</code>, <code>{rebate_deadline}</code>, <code>{rebate_percent}</code>, <code>{total}</code>, <code>{gram_panchayat}</code></div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-editor">⚙ Edit Reminder Templates</button>
+          </div>
+
+          <div class="tab-bar mb-14" id="template-type-tabs">
+            <button type="button" class="tab-btn active" data-type="upcoming">📅 Upcoming Reminder</button>
+            <button type="button" class="tab-btn" data-type="overdue">⚠ Overdue Notice</button>
+            <button type="button" class="tab-btn" data-type="penalty">💰 Penalty Notice</button>
+            <button type="button" class="tab-btn" data-type="rebate">🎁 Rebate Reminder</button>
+          </div>
+
+          <!-- Collapsible Template Editor -->
+          <div id="template-editor-drawer" style="display:none; background: #FFFBF5; border: 1px solid #F5EFE5; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+            <div class="flex-center" style="justify-content:space-between; margin-bottom: 10px;">
+              <div class="fs-12 fw-600 text-muted">Editing Template: <span id="editing-template-label" style="color: var(--saffron);">UPCOMING</span></div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-templates">🔄 Reset to Defaults</button>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group mb-0">
+                <label class="form-label" style="color: #92400E;">Marathi Template Text (मराठी)</label>
+                <textarea id="editor-body-mr" class="form-textarea" style="font-family: var(--font-mr); line-height: 1.6;"></textarea>
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label" style="color: #0369A1;">English Template Text</label>
+                <textarea id="editor-body-en" class="form-textarea" style="line-height: 1.6;"></textarea>
+              </div>
+            </div>
+            <div class="mt-12">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-save-template">💾 Save Template Changes</button>
+            </div>
+          </div>
+
+          <!-- Dual Live Message Preview Boxes -->
+          <div class="msg-preview-grid">
+            <div class="msg-box mr">
+              <div class="msg-box-label">मराठी नमुना संदेश (Marathi Sample)</div>
+              <div class="msg-box-body" id="preview-body-mr">Loading Marathi preview...</div>
+            </div>
+            <div class="msg-box en">
+              <div class="msg-box-label">English Sample Message</div>
+              <div class="msg-box-body" id="preview-body-en">Loading English preview...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Sub-Tabs -->
+        <div class="tab-bar mb-20" id="reminders-view-tabs">
+          <button type="button" class="tab-btn active" data-view="due">Due Reminders (<span id="count-due">0</span>)</button>
+          <button type="button" class="tab-btn" data-view="failed">Failed Sends (<span id="count-failed" class="text-danger">0</span>)</button>
+          <button type="button" class="tab-btn" data-view="history">Reminder History Log</button>
+        </div>
+
+        <!-- TAB 1: Due Reminders -->
+        <div id="view-content-due">
+          <div id="due-list"></div>
+        </div>
+
+        <!-- TAB 2: Failed Sends -->
+        <div id="view-content-failed" style="display:none;">
+          <div class="card card-sm mb-16" style="background: var(--danger-light); border-color: var(--danger-border);">
+            <div class="fw-600 text-danger fs-13">⚠ Failed Delivery Attempts</div>
+            <div class="fs-12 text-muted mt-2">These messages failed to deliver (e.g. invalid phone number, carrier rejection, network error). Click Retry to attempt resending.</div>
+          </div>
+          <div id="failed-list"></div>
+        </div>
+
+        <!-- TAB 3: History Log -->
+        <div id="view-content-history" style="display:none;">
+          <div class="table-wrap">
+            <table class="data-table" id="history-table">
+              <thead>
+                <tr>
+                  <th>Time Sent</th>
+                  <th>Taxpayer</th>
+                  <th>Property ID</th>
+                  <th>Stage Type</th>
+                  <th>Channel</th>
+                  <th>Status</th>
+                  <th>Error / Details</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody">
+                <tr><td colspan="7" class="text-muted" style="text-align:center; padding: 24px;">Loading log...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/reminders.js"></script>
+</body>
+</html>

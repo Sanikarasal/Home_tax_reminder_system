@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Settings</h1>
+        <div class="header-meta" id="header-date"></div>
+      </header>
+
+      <div class="page-content" style="max-width: 680px;">
+        <!-- GP Office Details -->
+        <div class="card mb-20">
+          <div class="fw-600 fs-14 mb-16" style="color: #1C1409;">Gram Panchayat Office Details</div>
+          <form id="office-form">
+            <div class="form-group">
+              <label class="form-label">Gram Panchayat Name (English)</label>
+              <input type="text" id="gp-name" class="form-input" placeholder="Gram Panchayat Office" required>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Taluka</label>
+                <input type="text" id="gp-taluka" class="form-input" placeholder="e.g. Vasai">
+              </div>
+              <div class="form-group">
+                <label class="form-label">District</label>
+                <input type="text" id="gp-district" class="form-input" placeholder="e.g. Palghar">
+              </div>
+            </div>
+            <div class="mt-14">
+              <button type="submit" class="btn btn-primary btn-sm">💾 Save Office Details</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tax Cycle Configuration Card -->
+        <div class="card mb-20" style="border: 1.5px solid var(--saffron);">
+          <div class="fw-600 fs-14" style="color: #1C1409;">Tax Cycle Configuration</div>
+          <div class="fs-12 text-light mb-20 mt-2">Global settings applied to all records — update once each financial year.</div>
+
+          <form id="cycle-form">
+            <div class="form-group mb-20">
+              <label class="form-label">Financial Year (FY)</label>
+              <input type="text" id="fy_label" class="form-input" style="max-width: 220px;" placeholder="2025-26" required>
+            </div>
+
+            <!-- Collection Period -->
+            <div class="form-group mb-20">
+              <label class="form-label">Collection Period</label>
+              <div class="flex gap-10 flex-center">
+                <select id="collection_from_month" class="form-select" style="width: 150px;">
+                  <option value="1">January</option>
+                  <option value="2">February</option>
+                  <option value="3">March</option>
+                  <option value="4">April</option>
+                  <option value="5">May</option>
+                  <option value="6">June</option>
+                  <option value="7">July</option>
+                  <option value="8">August</option>
+                  <option value="9">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+                <span class="fs-12 text-light">to</span>
+                <select id="collection_to_month" class="form-select" style="width: 150px;">
+                  <option value="1">January</option>
+                  <option value="2">February</option>
+                  <option value="3" selected>March</option>
+                  <option value="4">April</option>
+                  <option value="5">May</option>
+                  <option value="6">June</option>
+                  <option value="7">July</option>
+                  <option value="8">August</option>
+                  <option value="9">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Due Date -->
+            <div class="form-group mb-20">
+              <label class="form-label">Due Date</label>
+              <input type="date" id="due_date" class="form-input" style="width: 200px;" required>
+              <div class="fs-11 text-light mt-4">ⓘ All residents share this single due date</div>
+            </div>
+
+            <!-- Rebate -->
+            <div class="form-group mb-20" style="background: #FFFBF5; border: 1px solid #F5EFE5; border-radius: 10px; padding: 14px;">
+              <div class="flex-center gap-10 mb-10">
+                <div class="fw-600 fs-13" style="color: #1C1409;">Rebate (Early Payment Discount)</div>
+                <button type="button" id="btn-rebate-toggle" class="tab-btn" style="padding: 3px 12px; border-radius: 8px;">OFF</button>
+                <input type="checkbox" id="rebate_enabled" style="display:none;">
+              </div>
+              <div id="rebate-fields" style="display:none;" class="form-grid-2 mt-12">
+                <div class="form-group mb-0">
+                  <label class="form-label">Rebate %</label>
+                  <div class="flex flex-center gap-6">
+                    <input type="number" id="rebate_percent" class="form-input" style="width: 100px;" min="0" max="100" step="0.5" placeholder="5.0">
+                    <span class="fs-12 text-light">%</span>
+                  </div>
+                </div>
+                <div class="form-group mb-0">
+                  <label class="form-label">Rebate valid till</label>
+                  <input type="date" id="rebate_deadline" class="form-input">
+                </div>
+                <div class="full-width fs-11 text-light mt-4">ⓘ Rebate deadline must be before the main Due Date</div>
+              </div>
+            </div>
+
+            <!-- Penalty -->
+            <div class="form-group mb-20">
+              <label class="form-label">Penalty (Late Payment)</label>
+              <div class="flex gap-8 mb-12">
+                <button type="button" class="tab-btn active flex-1" id="btn-pen-flat" data-type="flat">₹ Flat / Month</button>
+                <button type="button" class="tab-btn flex-1" id="btn-pen-pct" data-type="percent">% of Amount / Month</button>
+                <input type="hidden" id="penalty_type" value="flat">
+              </div>
+              <div class="flex flex-center gap-12" style="flex-wrap: wrap;">
+                <div class="flex flex-center gap-6">
+                  <span class="fs-12 text-muted">Value:</span>
+                  <input type="number" id="penalty_value" class="form-input" style="width: 100px;" min="0" step="0.5" placeholder="50">
+                  <span class="fs-12 text-light" id="penalty-unit-label">₹/month</span>
+                </div>
+                <div class="flex flex-center gap-6">
+                  <span class="fs-12 text-muted">Starts:</span>
+                  <input type="number" id="penalty_start_days" class="form-input" style="width: 70px;" min="1" placeholder="1">
+                  <span class="fs-12 text-light">days after due date</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reminder Cadence -->
+            <div class="form-group mb-24">
+              <label class="form-label">Reminder Cadence</label>
+              
+              <div style="background: #FFFBF5; border: 1px solid #F5EFE5; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;">
+                <div class="fs-11 fw-600 mb-8" style="color: #92400E;">Pre-due reminders (days before due date)</div>
+                <div class="pill-row" id="pre-cadence-container"></div>
+                <div class="flex gap-6 mt-8 flex-center">
+                  <input type="number" id="input-add-pre" class="form-input" style="width: 80px;" placeholder="Days" min="1">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-add-pre">+ Add</button>
+                </div>
+              </div>
+
+              <div style="background: #FFFBF5; border: 1px solid #F5EFE5; border-radius: 8px; padding: 12px 14px;">
+                <div class="fs-11 fw-600 mb-8" style="color: #DC2626;">Post-due (overdue) reminders (days after due date)</div>
+                <div class="pill-row" id="post-cadence-container"></div>
+                <div class="flex gap-6 mt-8 flex-center">
+                  <input type="number" id="input-add-post" class="form-input" style="width: 80px;" placeholder="Days" min="1">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-add-post">+ Add</button>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btn-save-cycle">✓ Save Tax Cycle</button>
+          </form>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="card mb-20">
+          <div class="fw-600 fs-14 mb-12" style="color: #1C1409;">Statistics</div>
+          <div id="stats-list">
+            <div class="flex" style="justify-content:space-between; padding: 10px 0; border-bottom: 1px solid var(--cream-2);">
+              <span class="fs-13 text-muted">Total Records</span>
+              <span class="fw-700 fs-14" id="stat-row-total">0</span>
+            </div>
+            <div class="flex" style="justify-content:space-between; padding: 10px 0; border-bottom: 1px solid var(--cream-2);">
+              <span class="fs-13 text-muted">Overdue</span>
+              <span class="fw-700 fs-14 text-danger" id="stat-row-overdue">0</span>
+            </div>
+            <div class="flex" style="justify-content:space-between; padding: 10px 0; border-bottom: 1px solid var(--cream-2);">
+              <span class="fs-13 text-muted">Total Penalty Accrued</span>
+              <span class="fw-700 fs-14" style="color:#C2410C;" id="stat-row-penalty">₹0</span>
+            </div>
+            <div class="flex" style="justify-content:space-between; padding: 10px 0; border-bottom: 1px solid var(--cream-2);">
+              <span class="fs-13 text-muted">Total Pending (incl. penalty)</span>
+              <span class="fw-700 fs-14" style="color:#D97706;" id="stat-row-pending">₹0</span>
+            </div>
+            <div class="flex" style="justify-content:space-between; padding: 10px 0;">
+              <span class="fs-13 text-muted">Total Collected</span>
+              <span class="fw-700 fs-14 text-success" id="stat-row-collected">₹0</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

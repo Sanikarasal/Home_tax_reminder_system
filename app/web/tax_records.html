@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tax Records — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Tax Records</h1>
+        <div class="header-right">
+          <div id="header-overdue-alert" class="header-overdue-tag" style="display:none;">⚠ <span id="header-overdue-count">0</span> Overdue Taxpayers</div>
+          <div class="header-meta" id="header-date"></div>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- Cycle Banner -->
+        <div class="cycle-banner" id="cycle-banner">Loading tax cycle...</div>
+
+        <!-- Filter Row matching Figma Prototype -->
+        <div class="filter-row">
+          <input type="text" id="search-input" class="form-input search-input" placeholder="Search by name, property ID, ward...">
+          
+          <div class="tab-bar mb-0" id="status-pill-group">
+            <button type="button" class="tab-btn active" data-status="all">All</button>
+            <button type="button" class="tab-btn" data-status="unpaid">Unpaid</button>
+            <button type="button" class="tab-btn" data-status="overdue">Overdue</button>
+            <button type="button" class="tab-btn" data-status="paid">Paid</button>
+          </div>
+
+          <a href="report.html" class="btn btn-secondary">📊 Tax Report</a>
+          <a href="add_record.html" class="btn btn-primary">+ Add New</a>
+        </div>
+
+        <!-- Records Container -->
+        <div id="records-container"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/tax_records.js"></script>
+</body>
+</html>
