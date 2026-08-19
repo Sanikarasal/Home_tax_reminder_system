@@ -18,17 +18,44 @@ from services import settings_service, resident_service, template_service, messa
 log = logging.getLogger(__name__)
 
 
-# ── Dedup ─────────────────────────────────────────────────────────────────────
+# ── Dedup & cadence helpers ─────────────────────────────────────────────────────
 
-def already_sent(resident_id: int, cycle_id: int, stage_type: str) -> bool:
+def already_sent(
+    resident_id: int,
+    cycle_id: int,
+    stage_type: str,
+    days_offset: int | None = None,
+) -> bool:
     conn = get_connection()
-    row = conn.execute(
-        """SELECT 1 FROM reminder_log
-           WHERE resident_id=? AND cycle_id=? AND stage_type=? AND status='sent'
-           LIMIT 1""",
-        (resident_id, cycle_id, stage_type)
-    ).fetchone()
+    if days_offset is not None:
+        row = conn.execute(
+            """SELECT 1 FROM reminder_log
+               WHERE resident_id=? AND cycle_id=? AND stage_type=?
+                 AND days_offset=? AND status='sent'
+               LIMIT 1""",
+            (resident_id, cycle_id, stage_type, days_offset),
+        ).fetchone()
+    else:
+        row = conn.execute(
+            """SELECT 1 FROM reminder_log
+               WHERE resident_id=? AND cycle_id=? AND stage_type=? AND status='sent'
+               LIMIT 1""",
+            (resident_id, cycle_id, stage_type),
+        ).fetchone()
     return row is not None
+
+
+def _next_unsent_offset(
+    resident_id: int,
+    cycle_id: int,
+    stage_type: str,
+    offsets: list[int],
+    predicate,
+) -> int | None:
+    for offset in offsets:
+        if predicate(offset) and not already_sent(resident_id, cycle_id, stage_type, offset):
+            return offset
+    return None
 
 
 # ── Log Write ─────────────────────────────────────────────────────────────────
@@ -156,35 +183,41 @@ def run_daily_check() -> dict:
 
     for resident in unpaid_residents:
         rid = resident["id"]
+        result = None
 
-        # Rebate window
         if (
             cycle.get("rebate_enabled")
             and cycle.get("rebate_deadline")
             and today.isoformat() <= cycle["rebate_deadline"]
             and days_until_due >= 0
-            and days_until_due in pre_due_offsets
         ):
-            if already_sent(rid, cycle["id"], "rebate"):
-                skipped += 1
-                continue
-            result = send_reminder(rid, cycle, "rebate", days_until_due)
+            rebate_offset = _next_unsent_offset(
+                rid, cycle["id"], "rebate",
+                sorted(pre_due_offsets, reverse=True),
+                lambda d: days_until_due <= d,
+            )
+            if rebate_offset is not None:
+                result = send_reminder(rid, cycle, "rebate", rebate_offset)
 
-        # Standard pre-due
-        elif days_until_due >= 0 and days_until_due in pre_due_offsets:
-            if already_sent(rid, cycle["id"], "pre_due"):
-                skipped += 1
-                continue
-            result = send_reminder(rid, cycle, "pre_due", days_until_due)
+        if result is None and days_until_due >= 0:
+            pre_offset = _next_unsent_offset(
+                rid, cycle["id"], "pre_due",
+                sorted(pre_due_offsets, reverse=True),
+                lambda d: days_until_due <= d,
+            )
+            if pre_offset is not None:
+                result = send_reminder(rid, cycle, "pre_due", pre_offset)
 
-        # Post-due / penalty
-        elif days_overdue > 0 and days_overdue in post_due_offsets:
-            if already_sent(rid, cycle["id"], "post_due"):
-                skipped += 1
-                continue
-            result = send_reminder(rid, cycle, "post_due", days_overdue)
+        if result is None and days_overdue > 0:
+            post_offset = _next_unsent_offset(
+                rid, cycle["id"], "post_due",
+                sorted(post_due_offsets),
+                lambda d: days_overdue >= d,
+            )
+            if post_offset is not None:
+                result = send_reminder(rid, cycle, "post_due", post_offset)
 
-        else:
+        if result is None:
             skipped += 1
             continue
 
@@ -209,13 +242,40 @@ def send_now(resident_id: int, stage_type: str = "pre_due", force: bool = False)
     if not cycle:
         return {"status": "error", "reason": "no_active_cycle"}
 
-    if not force and already_sent(resident_id, cycle["id"], stage_type):
-        return {"status": "skipped", "reason": "already_sent"}
-
     due_dt = date.fromisoformat(cycle["due_date"])
     days_until = (due_dt - date.today()).days
     days_over  = (date.today() - due_dt).days
-    offset = days_until if days_until >= 0 else days_over
+
+    cadence_rows = settings_service.get_cadence(cycle["id"])
+    pre_offsets  = sorted(
+        {r["days_offset"] for r in cadence_rows if r["stage_type"] == "pre_due"},
+        reverse=True,
+    )
+    post_offsets = sorted(
+        {r["days_offset"] for r in cadence_rows if r["stage_type"] == "post_due"},
+    )
+
+    if stage_type == "post_due":
+        offset = _next_unsent_offset(
+            resident_id, cycle["id"], stage_type, post_offsets,
+            lambda d: days_over >= d,
+        ) if not force else (days_over if days_over > 0 else 0)
+    elif stage_type == "rebate":
+        offset = _next_unsent_offset(
+            resident_id, cycle["id"], stage_type, pre_offsets,
+            lambda d: days_until >= 0 and days_until <= d,
+        ) if not force else max(days_until, 0)
+    else:
+        offset = _next_unsent_offset(
+            resident_id, cycle["id"], stage_type, pre_offsets,
+            lambda d: days_until >= 0 and days_until <= d,
+        ) if not force else max(days_until, 0)
+
+    if not force and offset is None:
+        return {"status": "skipped", "reason": "already_sent"}
+
+    if offset is None:
+        offset = days_until if days_until >= 0 else days_over
 
     return send_reminder(resident_id, cycle, stage_type, offset)
 

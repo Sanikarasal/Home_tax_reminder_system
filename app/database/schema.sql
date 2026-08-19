@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS residents (
     ward            TEXT    DEFAULT '',
     phone           TEXT    NOT NULL,
     address         TEXT    DEFAULT '',
-    base_amount     REAL    NOT NULL,
+    base_amount     REAL    NOT NULL DEFAULT 0,
     payment_status  TEXT    NOT NULL DEFAULT 'unpaid',   -- 'unpaid' | 'paid'
     paid_date       TEXT,                                 -- ISO date, NULL if unpaid
     created_at      TEXT    DEFAULT (datetime('now'))
@@ -45,9 +45,6 @@ CREATE TABLE IF NOT EXISTS reminder_cadence (
 );
 
 -- ── Bilingual Message Templates ───────────────────────────────────────────────
--- Placeholders: {name} {due_date} {amount} {penalty_amount}
---               {rebate_deadline} {rebate_percent} {total} {ward}
---               {property_id} {gram_panchayat}
 CREATE TABLE IF NOT EXISTS message_templates (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     template_type TEXT    NOT NULL,   -- 'upcoming' | 'rebate' | 'overdue' | 'penalty'

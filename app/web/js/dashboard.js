@@ -29,10 +29,7 @@ function loadCycle() {
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const fromM = months[(cycle.collection_from_month || 1) - 1];
     const toM   = months[(cycle.collection_to_month || 3) - 1];
-    let str = `📅 FY ${cycle.fy_label} · Collection: ${fromM}–${toM} · Due ${formatDate(cycle.due_date)}`;
-    if (cycle.rebate_enabled) {
-      str += ` · Rebate ${cycle.rebate_percent}% till ${formatDate(cycle.rebate_deadline)}`;
-    }
+    let str = `📅 FY ${cycle.fy_label} · Collection: ${fromM}–${toM} · Due Date: ${formatDate(cycle.due_date)}`;
     el.textContent = str;
   });
 }
@@ -41,8 +38,8 @@ function loadDashboardData() {
   eel.get_resident_stats()((stats) => {
     document.getElementById("stat-total").textContent        = (stats && stats.total) || 0;
     document.getElementById("stat-paid").textContent         = (stats && stats.paid) || 0;
-    document.getElementById("stat-pending-sum").textContent  = formatCurrency(stats ? stats.total_due : 0);
-    document.getElementById("stat-penalty").textContent      = formatCurrency(stats ? stats.total_penalty : 0);
+    const pendingVal = stats ? (stats.pending_base !== undefined ? stats.pending_base : stats.total_due) : 0;
+    document.getElementById("stat-pending-sum").textContent  = formatCurrency(pendingVal);
     document.getElementById("stat-collected").textContent    = formatCurrency(stats ? stats.paid_sum : 0);
   });
 
@@ -109,37 +106,11 @@ function loadDashboardData() {
   });
 }
 
-function calculatePenaltyLocal(baseAmount, cycle) {
-  if (!cycle || !cycle.due_date) return 0;
-  const dueDt = new Date(cycle.due_date);
-  const today = new Date();
-  const diffDays = Math.max(0, Math.floor((today - dueDt) / (1000 * 60 * 60 * 24)));
-  if (diffDays < (cycle.penalty_start_days || 1)) return 0;
-  const monthsLate = Math.ceil(diffDays / 30);
-  if (cycle.penalty_type === "percent") {
-    return Math.round(baseAmount * ((cycle.penalty_value || 0) / 100) * monthsLate);
-  }
-  return (cycle.penalty_value || 0) * monthsLate;
-}
-
-function calculateRebateLocal(baseAmount, cycle) {
-  if (!cycle || !cycle.rebate_enabled || !cycle.rebate_deadline) return 0;
-  const today = new Date().toISOString().split("T")[0];
-  if (today <= cycle.rebate_deadline) {
-    return Math.round(baseAmount * ((cycle.rebate_percent || 0) / 100));
-  }
-  return 0;
-}
-
 function renderResidentCard(r, cycle, isForcedOverdue = false) {
   const today = new Date(); today.setHours(0,0,0,0);
   const dueDt = cycle && cycle.due_date ? new Date(cycle.due_date) : null;
   if (dueDt) dueDt.setHours(0,0,0,0);
   const isOverdue = isForcedOverdue || (r.payment_status === "unpaid" && dueDt && dueDt < today);
-
-  const penalty = isOverdue ? calculatePenaltyLocal(r.base_amount, cycle) : 0;
-  const rebate  = !isOverdue && r.payment_status === "unpaid" ? calculateRebateLocal(r.base_amount, cycle) : 0;
-  const netDue  = r.payment_status === "paid" ? r.base_amount : r.base_amount + penalty;
 
   const cardClass = r.payment_status === "paid" ? "record-card paid" : isOverdue ? "record-card overdue" : "record-card";
   const displayStatus = isOverdue ? "overdue" : r.payment_status;
@@ -150,8 +121,6 @@ function renderResidentCard(r, cycle, isForcedOverdue = false) {
         <div class="flex-center gap-8" style="flex-wrap: wrap;">
           <span class="record-card-name">${r.name}</span>
           ${statusBadge(displayStatus)}
-          ${penalty > 0 ? `<span class="pill-penalty">+${formatCurrency(penalty)} penalty</span>` : ''}
-          ${rebate > 0 ? `<span class="pill-rebate">−${formatCurrency(rebate)} rebate</span>` : ''}
         </div>
         <div class="record-card-meta">
           <span>📋 ${r.property_id}</span>
@@ -161,8 +130,7 @@ function renderResidentCard(r, cycle, isForcedOverdue = false) {
         </div>
       </div>
       <div class="record-card-amount">
-        ${penalty > 0 || rebate > 0 ? `<div class="record-card-base">${formatCurrency(r.base_amount)}</div>` : ''}
-        <div class="record-card-total">${formatCurrency(netDue)}</div>
+        <div class="record-card-total">${formatCurrency(r.base_amount)}</div>
         <div class="record-card-actions">
           <button class="btn btn-success btn-sm" onclick="handleMarkPaid(${r.id})">✓ Mark Paid</button>
           <a href="add_record.html?id=${r.id}" class="btn btn-secondary btn-sm">✏ Edit</a>

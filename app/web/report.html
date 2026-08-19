@@ -61,7 +61,7 @@
         </div>
 
         <!-- KPI Grid -->
-        <div class="stat-grid stat-grid-4 mb-24" id="report-kpi-grid">
+        <div class="stat-grid stat-grid-3 mb-24" id="report-kpi-grid">
           <div class="stat-card green">
             <div class="stat-kpi-sub text-success">Paid Tax Collected</div>
             <div class="stat-value fs-22 mt-4" style="color:#065F46;" id="rep-paid-sum">₹0</div>
@@ -72,15 +72,10 @@
             <div class="stat-value fs-22 mt-4" style="color:#991B1B;" id="rep-unpaid-sum">₹0</div>
             <div class="fs-11 text-danger mt-2"><span id="rep-unpaid-count">0</span> Taxpayer(s) Unpaid</div>
           </div>
-          <div class="stat-card amber">
-            <div class="stat-kpi-sub text-warn">Penalty Amount</div>
-            <div class="stat-value fs-22 mt-4" style="color:#9A3412;" id="rep-penalty-sum">₹0</div>
-            <div class="fs-11 text-warn mt-2">Added to late dues</div>
-          </div>
           <div class="stat-card amber" style="background:#FFFBEB; border-color:#FDE68A;">
-            <div class="stat-kpi-sub" style="color:#D97706;">Total Outstanding</div>
+            <div class="stat-kpi-sub" style="color:#D97706;">Total Tax Value</div>
             <div class="stat-value fs-22 mt-4" style="color:#92400E;" id="rep-total-due">₹0</div>
-            <div class="fs-11 text-warn mt-2">Base + penalty</div>
+            <div class="fs-11 text-warn mt-2">Combined taxable value</div>
           </div>
         </div>
 
@@ -96,15 +91,12 @@
                 <th>Property ID</th>
                 <th>Taxpayer Name</th>
                 <th>Ward</th>
-                <th>Status</th>
-                <th class="right">Base Tax</th>
-                <th class="right" id="th-rebate" style="display:none;">Rebate</th>
-                <th class="right">Penalty</th>
-                <th class="right">Net Amount</th>
+                <th>Payment Status</th>
+                <th class="right">Tax Amount</th>
               </tr>
             </thead>
             <tbody id="report-tbody">
-              <tr><td colspan="8" class="text-muted" style="text-align:center; padding: 32px;">Loading statement...</td></tr>
+              <tr><td colspan="5" class="text-muted" style="text-align:center; padding: 32px;">Loading statement...</td></tr>
             </tbody>
           </table>
         </div>

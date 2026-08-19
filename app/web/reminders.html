@@ -27,17 +27,15 @@
         <div class="card mb-24">
           <div class="flex-center" style="justify-content: space-between; margin-bottom: 12px;">
             <div>
-              <div class="fw-600 fs-14" style="color: #1C1409;">🔔 Bilingual Reminder Template Settings & Sample Preview</div>
-              <div class="fs-11 text-light mt-2">Placeholders: <code>{name}</code>, <code>{due_date}</code>, <code>{amount}</code>, <code>{penalty_amount}</code>, <code>{rebate_deadline}</code>, <code>{rebate_percent}</code>, <code>{total}</code>, <code>{gram_panchayat}</code></div>
+              <div class="fw-600 fs-14" style="color: #1C1409;">🔔 Due Reminder Template Settings & Sample Preview (मराठी)</div>
+              <div class="fs-11 text-light mt-2">Placeholders: <code>{name}</code>, <code>{due_date}</code>, <code>{amount}</code>, <code>{total}</code>, <code>{ward}</code>, <code>{property_id}</code>, <code>{gram_panchayat}</code></div>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-editor">⚙ Edit Reminder Templates</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-editor">⚙ Edit Reminder Template</button>
           </div>
 
           <div class="tab-bar mb-14" id="template-type-tabs">
-            <button type="button" class="tab-btn active" data-type="upcoming">📅 Upcoming Reminder</button>
+            <button type="button" class="tab-btn active" data-type="upcoming">📅 Upcoming Due Reminder</button>
             <button type="button" class="tab-btn" data-type="overdue">⚠ Overdue Notice</button>
-            <button type="button" class="tab-btn" data-type="penalty">💰 Penalty Notice</button>
-            <button type="button" class="tab-btn" data-type="rebate">🎁 Rebate Reminder</button>
           </div>
 
           <!-- Collapsible Template Editor -->
@@ -46,31 +44,19 @@
               <div class="fs-12 fw-600 text-muted">Editing Template: <span id="editing-template-label" style="color: var(--saffron);">UPCOMING</span></div>
               <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-templates">🔄 Reset to Defaults</button>
             </div>
-            <div class="form-grid-2">
-              <div class="form-group mb-0">
-                <label class="form-label" style="color: #92400E;">Marathi Template Text (मराठी)</label>
-                <textarea id="editor-body-mr" class="form-textarea" style="font-family: var(--font-mr); line-height: 1.6;"></textarea>
-              </div>
-              <div class="form-group mb-0">
-                <label class="form-label" style="color: #0369A1;">English Template Text</label>
-                <textarea id="editor-body-en" class="form-textarea" style="line-height: 1.6;"></textarea>
-              </div>
+            <div class="form-group mb-0">
+              <label class="form-label" style="color: #92400E; font-weight: 600;">मराठी संदेश नमुना मजकूर (Marathi Template Text)</label>
+              <textarea id="editor-body-mr" class="form-textarea" rows="4" style="font-family: var(--font-mr); line-height: 1.6; width: 100%;"></textarea>
             </div>
             <div class="mt-12">
               <button type="button" class="btn btn-primary btn-sm" id="btn-save-template">💾 Save Template Changes</button>
             </div>
           </div>
 
-          <!-- Dual Live Message Preview Boxes -->
-          <div class="msg-preview-grid">
-            <div class="msg-box mr">
-              <div class="msg-box-label">मराठी नमुना संदेश (Marathi Sample)</div>
-              <div class="msg-box-body" id="preview-body-mr">Loading Marathi preview...</div>
-            </div>
-            <div class="msg-box en">
-              <div class="msg-box-label">English Sample Message</div>
-              <div class="msg-box-body" id="preview-body-en">Loading English preview...</div>
-            </div>
+          <!-- Live Marathi Message Preview Box -->
+          <div class="msg-box mr" style="width: 100%;">
+            <div class="msg-box-label">मराठी नमुना संदेश (MARATHI SAMPLE PREVIEW)</div>
+            <div class="msg-box-body" id="preview-body-mr">Loading Marathi preview...</div>
           </div>
         </div>
 

@@ -84,15 +84,13 @@ function loadReportData() {
     const paidCountEl = document.getElementById("rep-paid-count");
     const unpaidSumEl = document.getElementById("rep-unpaid-sum");
     const unpaidCountEl = document.getElementById("rep-unpaid-count");
-    const penaltySumEl = document.getElementById("rep-penalty-sum");
     const totalDueEl = document.getElementById("rep-total-due");
 
     if (paidSumEl) paidSumEl.textContent = formatCurrency(res.paid_sum);
     if (paidCountEl) paidCountEl.textContent = res.paid_count || 0;
     if (unpaidSumEl) unpaidSumEl.textContent = formatCurrency(res.unpaid_sum);
     if (unpaidCountEl) unpaidCountEl.textContent = res.unpaid_count || 0;
-    if (penaltySumEl) penaltySumEl.textContent = formatCurrency(res.penalty_sum);
-    if (totalDueEl) totalDueEl.textContent = formatCurrency(res.total_outstanding);
+    if (totalDueEl) totalDueEl.textContent = formatCurrency((res.paid_sum || 0) + (res.unpaid_sum || 0));
 
     const recs = Array.isArray(res.records) ? res.records : [];
     const tableCount = document.getElementById("table-count");
@@ -111,23 +109,19 @@ function loadReportData() {
     if (!tbody) return;
 
     if (!recs.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-muted" style="text-align:center; padding: 48px;"><div style="font-size:32px;">📊</div><div style="margin-top:8px;">No records match the selected criteria.</div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center; padding: 48px;"><div style="font-size:32px;">📊</div><div style="margin-top:8px;">No records match the selected criteria.</div></td></tr>`;
       return;
     }
 
-    tbody.innerHTML = recs.map((r, idx) => {
+    tbody.innerHTML = recs.map((r) => {
       const isPaid = r.payment_status === "paid";
-      const pen = r.penalty || 0;
-      const net = r.net_due || r.base_amount;
       return `
         <tr>
           <td class="fw-600">${r.property_id}</td>
           <td class="fw-500">${r.name}</td>
           <td class="text-muted">${r.ward || '—'}</td>
           <td>${statusBadge(r.payment_status)}</td>
-          <td class="right">${formatCurrency(r.base_amount)}</td>
-          <td class="right ${pen > 0 ? 'text-danger' : 'text-muted'}">${pen > 0 ? '+' + formatCurrency(pen) : '₹0'}</td>
-          <td class="right fw-700 ${isPaid ? 'text-success' : 'text-danger'}">${formatCurrency(net)}</td>
+          <td class="right fw-700 ${isPaid ? 'text-success' : 'text-danger'}">${formatCurrency(r.base_amount)}</td>
         </tr>
       `;
     }).join("");

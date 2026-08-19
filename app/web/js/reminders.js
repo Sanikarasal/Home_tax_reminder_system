@@ -81,14 +81,7 @@ function loadCycle() {
       el.textContent = "⚠️ No active tax cycle configured. Reminders require an active cycle.";
       return;
     }
-    let str = `📅 Global cadence from due date ${formatDate(cycle.due_date)}`;
-    if (cycle.rebate_enabled) {
-      str += ` · Early Rebate: ${cycle.rebate_percent}% till ${formatDate(cycle.rebate_deadline)}`;
-    }
-    if (cycle.penalty_value > 0) {
-      str += ` · Penalty: ${cycle.penalty_type === 'percent' ? cycle.penalty_value + '%' : '₹' + cycle.penalty_value} / month`;
-    }
-    el.textContent = str;
+    el.textContent = `📅 Cadence active from due date: ${formatDate(cycle.due_date)}`;
   });
 }
 
@@ -102,11 +95,8 @@ function loadTemplates() {
 
 function populateEditor() {
   const mr = (allTemplates[currentTemplateType] && allTemplates[currentTemplateType].mr) || "";
-  const en = (allTemplates[currentTemplateType] && allTemplates[currentTemplateType].en) || "";
   const mrInput = document.getElementById("editor-body-mr");
-  const enInput = document.getElementById("editor-body-en");
   if (mrInput) mrInput.value = mr;
-  if (enInput) enInput.value = en;
 }
 
 function updatePreview() {
@@ -115,21 +105,14 @@ function updatePreview() {
     const el = document.getElementById("preview-body-mr");
     if (el) el.textContent = mr || "—";
   });
-  eel.preview_message(sampleTaxpayer.id || 1, currentTemplateType, "en")((en) => {
-    const el = document.getElementById("preview-body-en");
-    if (el) el.textContent = en || "—";
-  });
 }
 
 function handleSaveTemplate() {
   const mr = document.getElementById("editor-body-mr")?.value || "";
-  const en = document.getElementById("editor-body-en")?.value || "";
 
   eel.update_template(currentTemplateType, "mr", mr)(() => {
-    eel.update_template(currentTemplateType, "en", en)(() => {
-      showToast("Template updated successfully!");
-      loadTemplates();
-    });
+    showToast("Marathi template updated successfully!");
+    loadTemplates();
   });
 }
 
@@ -173,27 +156,11 @@ function loadDueList() {
   });
 }
 
-function calculatePenaltyLocal(baseAmount, cycle) {
-  if (!cycle || !cycle.due_date) return 0;
-  const dueDt = new Date(cycle.due_date);
-  const today = new Date();
-  const diffDays = Math.max(0, Math.floor((today - dueDt) / (1000 * 60 * 60 * 24)));
-  if (diffDays < (cycle.penalty_start_days || 1)) return 0;
-  const monthsLate = Math.ceil(diffDays / 30);
-  if (cycle.penalty_type === "percent") {
-    return Math.round(baseAmount * ((cycle.penalty_value || 0) / 100) * monthsLate);
-  }
-  return (cycle.penalty_value || 0) * monthsLate;
-}
-
 function renderDueCard(r, cycle) {
   const today = new Date(); today.setHours(0,0,0,0);
   const dueDt = cycle && cycle.due_date ? new Date(cycle.due_date) : null;
   if (dueDt) dueDt.setHours(0,0,0,0);
   const isOverdue = dueDt && dueDt < today;
-
-  const penalty = isOverdue ? calculatePenaltyLocal(r.base_amount, cycle) : 0;
-  const total = r.base_amount + penalty;
   const stage = isOverdue ? "post_due" : "pre_due";
 
   return `
@@ -202,18 +169,16 @@ function renderDueCard(r, cycle) {
         <div class="flex-center gap-8" style="flex-wrap: wrap;">
           <span class="record-card-name">${r.name}</span>
           ${statusBadge(isOverdue ? "overdue" : "unpaid")}
-          ${penalty > 0 ? `<span class="pill-penalty">+${formatCurrency(penalty)} penalty</span>` : ''}
         </div>
         <div class="record-card-meta">
           <span>📋 ${r.property_id}</span>
           ${r.ward ? `<span>🏘 ${r.ward}</span>` : ''}
           ${r.phone ? `<span>📞 ${r.phone}</span>` : ''}
-          <span>Due: <strong>${formatDate(cycle ? cycle.due_date : '')}</strong></span>
+          <span>Due Date: <strong>${formatDate(cycle ? cycle.due_date : '')}</strong></span>
         </div>
       </div>
       <div class="record-card-amount">
-        ${penalty > 0 ? `<div class="record-card-base">${formatCurrency(r.base_amount)}</div>` : ''}
-        <div class="record-card-total">${formatCurrency(total)}</div>
+        <div class="record-card-total">${formatCurrency(r.base_amount)}</div>
         <div class="record-card-actions">
           <button class="btn btn-primary btn-sm" onclick="handleSendNow(${r.id}, '${stage}', false)">📨 Send Reminder</button>
           <button class="btn btn-secondary btn-sm" onclick="handleSendNow(${r.id}, '${stage}', true)" title="Bypass duplicate send check">Force Send</button>

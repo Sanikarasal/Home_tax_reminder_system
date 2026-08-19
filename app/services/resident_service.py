@@ -59,15 +59,12 @@ def get_resident_by_id(resident_id: int) -> dict | None:
 
 
 def get_resident_by_property_id(property_id: str) -> dict | None:
-    if property_id is None:
-        return None
-    q = str(property_id).strip()
+    q = (property_id or "").strip()
     if not q:
         return None
-    conn = get_connection()
-    row = conn.execute(
-        "SELECT * FROM residents WHERE LOWER(TRIM(property_id)) = LOWER(?) LIMIT 1",
-        (q,),
+    row = get_connection().execute(
+        "SELECT * FROM residents WHERE LOWER(TRIM(property_id))=LOWER(?)",
+        (q,)
     ).fetchone()
     return dict(row) if row else None
 
@@ -91,14 +88,18 @@ def create_resident(data: dict) -> dict:
     Insert a new resident. Raises ValueError on duplicate property_id.
     Returns the created resident dict.
     """
-    # Check duplicate property_id
     conn = get_connection()
+    pid = str(data.get("property_id", "")).strip()
+    name = str(data.get("name", "")).strip()
+    if not name or not pid:
+        raise ValueError("Name and house/property number are required.")
+
     existing = conn.execute(
-        "SELECT id FROM residents WHERE property_id=?",
-        (data.get("property_id", "").strip(),)
+        "SELECT id FROM residents WHERE LOWER(TRIM(property_id))=LOWER(?)",
+        (pid,)
     ).fetchone()
     if existing:
-        raise ValueError(f"Property ID '{data['property_id']}' already exists.")
+        raise ValueError(f"Property ID '{pid}' already exists.")
 
     paid = bool(data.get("paid", False)) or data.get("payment_status") == "paid"
     paid_date = data.get("paid_date", date.today().isoformat() if paid else None)
@@ -108,44 +109,37 @@ def create_resident(data: dict) -> dict:
            (name, property_id, ward, phone, address, base_amount, payment_status, paid_date)
            VALUES (?,?,?,?,?,?,?,?)""",
         (
-            data.get("name", "").strip(),
-            data.get("property_id", "").strip(),
-            data.get("ward", "").strip(),
-            data.get("phone", "").strip(),
-            data.get("address", "").strip(),
+            name,
+            pid,
+            str(data.get("ward", "")).strip(),
+            str(data.get("phone", "")).strip(),
+            str(data.get("address", "")).strip(),
             float(data.get("base_amount", 0)),
             "paid" if paid else "unpaid",
             paid_date if paid else None,
         )
     )
-    log.info("Created resident id=%s property_id=%s", row_id, data.get("property_id"))
+    log.info("Created resident id=%s property_id=%s", row_id, pid)
     return get_resident_by_id(row_id)
 
 
 def update_resident(resident_id: int, data: dict) -> dict | None:
-    """Update all mutable fields of a resident.
-
-    Uses `data.get(key) or existing[...]` semantics so an explicit `None`
-    from JS falls back to the previously stored value instead of crashing
-    on `.strip()` or float conversion.
-    """
+    """Update all mutable fields of a resident."""
     existing = get_resident_by_id(resident_id)
     if not existing:
         return None
 
+    pid = str(data.get("property_id", existing["property_id"])).strip()
+    name = str(data.get("name", existing["name"])).strip()
+    if not name or not pid:
+        raise ValueError("Name and property ID cannot be empty.")
+
+    duplicate = get_resident_by_property_id(pid)
+    if duplicate and duplicate["id"] != resident_id:
+        raise ValueError(f"Property ID '{pid}' already exists.")
+
     paid = bool(data.get("paid", False)) or data.get("payment_status") == "paid"
     paid_date = data.get("paid_date") or (date.today().isoformat() if paid else None)
-
-    name = (data.get("name") or existing["name"] or "").strip()
-    property_id = (data.get("property_id") or existing["property_id"] or "").strip()
-    ward = (data.get("ward") or existing["ward"] or "").strip()
-    phone = (data.get("phone") or existing["phone"] or "").strip()
-    address = (data.get("address") or existing["address"] or "").strip()
-
-    if data.get("base_amount") is not None:
-        base_amount = float(data["base_amount"])
-    else:
-        base_amount = float(existing["base_amount"])
 
     execute_write(
         """UPDATE residents
@@ -154,11 +148,11 @@ def update_resident(resident_id: int, data: dict) -> dict | None:
            WHERE id=?""",
         (
             name,
-            property_id,
-            ward,
-            phone,
-            address,
-            base_amount,
+            pid,
+            str(data.get("ward", existing["ward"])).strip(),
+            str(data.get("phone", existing["phone"])).strip(),
+            str(data.get("address", existing["address"])).strip(),
+            float(data.get("base_amount", existing["base_amount"])),
             "paid" if paid else "unpaid",
             paid_date if paid else None,
             resident_id,
@@ -236,3 +230,4 @@ def get_stats(cycle: dict | None = None) -> dict:
         "total_penalty": round(total_penalty, 2),
         "total_due":     round(pending_base + total_penalty, 2),
     }
+

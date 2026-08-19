@@ -17,11 +17,14 @@ _scheduler: BackgroundScheduler | None = None
 def _run_job() -> None:
     """Wrapper so APScheduler can import this without circular deps."""
     from services.reminder_engine import run_daily_check
+    from services.system_service import record_scheduler_run
     try:
         result = run_daily_check()
+        record_scheduler_run(result)
         log.info("Scheduled job result: %s", result)
     except Exception as e:
         log.exception("Scheduled job raised an exception: %s", e)
+        record_scheduler_run({"status": "error", "error": str(e)})
 
 
 def start_scheduler() -> None:
@@ -51,26 +54,30 @@ def stop_scheduler() -> None:
 
 
 def get_scheduler_status() -> dict:
+    from services.system_service import get_scheduler_info
     if not _scheduler:
-        return {"running": False, "next_run": None}
+        return get_scheduler_info({"running": False, "next_run": None, "job_count": 0})
     jobs = _scheduler.get_jobs()
     next_run = None
     if jobs:
         nr = jobs[0].next_run_time
         next_run = nr.isoformat() if nr else None
-    return {
+    return get_scheduler_info({
         "running":  _scheduler.running,
         "next_run": next_run,
         "job_count": len(jobs),
-    }
+    })
 
 
 def trigger_now() -> dict:
     """Manually trigger the daily job immediately (for testing from UI)."""
     from services.reminder_engine import run_daily_check
+    from services.system_service import record_scheduler_run
     try:
         result = run_daily_check()
+        record_scheduler_run(result)
         return {"status": "done", "result": result}
     except Exception as e:
         log.exception("Manual trigger failed: %s", e)
+        record_scheduler_run({"status": "error", "error": str(e)})
         return {"status": "error", "error": str(e)}

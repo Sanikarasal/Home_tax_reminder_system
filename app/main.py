@@ -36,7 +36,9 @@ from services import (
 
 # ── Init ──────────────────────────────────────────────────────────────────────
 
-eel.init("web")
+_app_dir = os.path.dirname(os.path.abspath(__file__))
+_web_dir = os.path.join(_app_dir, "web")
+eel.init(_web_dir)
 init_db()
 
 # ── Auth placeholder (for future login system) ────────────────────────────────

@@ -10,9 +10,10 @@ from dotenv import load_dotenv
 
 log = logging.getLogger(__name__)
 
-# Load .env from project root (one level up from this file's dir if needed,
-# but main.py sets cwd to project root before importing)
-load_dotenv(override=False)
+# Load .env from the app/ directory (same folder as this config.py file)
+# This guarantees .env is always found regardless of cwd at launch time.
+_env_file = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=_env_file, override=False)
 
 
 def _parse_check_time(raw_value: str | None) -> tuple[int, int]:
@@ -30,7 +31,9 @@ def _parse_check_time(raw_value: str | None) -> tuple[int, int]:
         return 9, 0
 
 # ── Database ──────────────────────────────────────────────────────────────────
-DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/tax_reminder.db")
+_app_dir = Path(__file__).resolve().parent
+_default_db = str(_app_dir / "data" / "tax_reminder.db")
+DATABASE_PATH: str = os.getenv("DATABASE_PATH", _default_db)
 
 # ── Twilio ────────────────────────────────────────────────────────────────────
 TWILIO_ACCOUNT_SID: str  = os.getenv("TWILIO_ACCOUNT_SID", "")

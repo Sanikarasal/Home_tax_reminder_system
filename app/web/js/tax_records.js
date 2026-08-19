@@ -43,34 +43,9 @@ function loadCycle() {
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const fromM = months[(cycle.collection_from_month || 1) - 1];
     const toM   = months[(cycle.collection_to_month || 3) - 1];
-    let str = `📅 FY ${cycle.fy_label} · Tax due by ${formatDate(cycle.due_date)}`;
-    if (cycle.rebate_enabled) {
-      str += ` · Rebate ${cycle.rebate_percent}% if paid by ${formatDate(cycle.rebate_deadline)}`;
-    }
+    let str = `📅 FY ${cycle.fy_label} · Collection: ${fromM}–${toM} · Tax due by ${formatDate(cycle.due_date)}`;
     el.textContent = str;
   });
-}
-
-function calculatePenaltyLocal(baseAmount, cycle) {
-  if (!cycle || !cycle.due_date) return 0;
-  const dueDt = new Date(cycle.due_date);
-  const today = new Date();
-  const diffDays = Math.max(0, Math.floor((today - dueDt) / (1000 * 60 * 60 * 24)));
-  if (diffDays < (cycle.penalty_start_days || 1)) return 0;
-  const monthsLate = Math.ceil(diffDays / 30);
-  if (cycle.penalty_type === "percent") {
-    return Math.round(baseAmount * ((cycle.penalty_value || 0) / 100) * monthsLate);
-  }
-  return (cycle.penalty_value || 0) * monthsLate;
-}
-
-function calculateRebateLocal(baseAmount, cycle) {
-  if (!cycle || !cycle.rebate_enabled || !cycle.rebate_deadline) return 0;
-  const today = new Date().toISOString().split("T")[0];
-  if (today <= cycle.rebate_deadline) {
-    return Math.round(baseAmount * ((cycle.rebate_percent || 0) / 100));
-  }
-  return 0;
 }
 
 function loadRecords() {
@@ -132,10 +107,6 @@ function renderRecordItem(r, cycle) {
   const isOverdue = r.payment_status === "unpaid" && dueDt && dueDt < today;
 
   const isPaid = r.payment_status === "paid";
-  const penalty = isOverdue ? calculatePenaltyLocal(r.base_amount, cycle) : 0;
-  const rebate  = !isOverdue && !isPaid ? calculateRebateLocal(r.base_amount, cycle) : 0;
-  const netDue  = isPaid ? r.base_amount : r.base_amount + penalty;
-
   const cardClass = isPaid ? "record-card paid" : isOverdue ? "record-card overdue" : "record-card";
   const displayStatus = isOverdue ? "overdue" : r.payment_status;
 
@@ -145,8 +116,6 @@ function renderRecordItem(r, cycle) {
         <div class="flex-center gap-8" style="flex-wrap: wrap;">
           <span class="record-card-name">${r.name}</span>
           ${statusBadge(displayStatus)}
-          ${penalty > 0 ? `<span class="pill-penalty">+${formatCurrency(penalty)} penalty</span>` : ''}
-          ${rebate > 0 ? `<span class="pill-rebate">−${formatCurrency(rebate)} rebate</span>` : ''}
         </div>
         <div class="record-card-meta">
           <span>📋 ${r.property_id}</span>
@@ -156,8 +125,7 @@ function renderRecordItem(r, cycle) {
         </div>
       </div>
       <div class="record-card-amount">
-        ${penalty > 0 || rebate > 0 ? `<div class="record-card-base">${formatCurrency(r.base_amount)}</div>` : ''}
-        <div class="record-card-total">${formatCurrency(netDue)}</div>
+        <div class="record-card-total">${formatCurrency(r.base_amount)}</div>
         <div class="record-card-actions">
           ${isPaid
             ? `<button class="btn btn-secondary btn-sm" onclick="handleMarkUnpaid(${r.id})">Mark Unpaid</button>`
