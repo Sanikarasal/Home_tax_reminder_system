@@ -2,128 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Import from Word — Home Tax Reminder Manager</title>
-  <link rel="stylesheet" href="css/style.css">
-  <script type="text/javascript" src="/eel.js"></script>
+  <meta http-equiv="refresh" content="0; url=add_record.html?mode=import">
+  <title>Redirecting to Add Tax Record...</title>
+  <script>
+    window.location.href = "add_record.html?mode=import";
+  </script>
 </head>
-<body>
-  <div class="app-shell">
-    <div id="sidebar-container"></div>
-
-    <main class="main-area">
-      <header class="page-header">
-        <h1>Import from Word Document</h1>
-        <div class="header-meta" id="header-date"></div>
-      </header>
-
-      <div class="page-content" style="max-width: 780px;">
-        <!-- Top Context Banner -->
-        <div class="card mb-20" style="background: #FFFBEB; border-color: #FDE68A; padding: 14px 18px;">
-          <div class="fw-600 fs-13" style="color: #92400E; margin-bottom: 4px;">📄 Import Taxpayer Records from Word Document</div>
-          <div class="fs-12" style="color: #6B5040;">Upload an actual <code>.docx</code> Word file, or copy-paste text blocks below. Supports both Word table layouts and paragraph text.</div>
-        </div>
-
-        <!-- Mode Switcher Tabs -->
-        <div class="tab-bar mb-16" id="import-mode-tabs">
-          <button type="button" class="tab-btn active" data-mode="file">📁 Upload .docx Word File</button>
-          <button type="button" class="tab-btn" data-mode="paste">📋 Paste Text from Document</button>
-        </div>
-
-        <!-- MODE 1: File Upload (.docx) -->
-        <div id="mode-content-file" class="card mb-20" style="padding: 24px;">
-          <div id="drop-zone" style="border: 2px dashed var(--border); border-radius: 12px; padding: 32px 20px; text-align: center; background: #FFFBF5; cursor: pointer; transition: all 0.2s;">
-            <div style="font-size: 42px; margin-bottom: 8px;">📄</div>
-            <div class="fw-600 fs-14 text-primary">Click to select or drag & drop a .docx Word document</div>
-            <div class="fs-12 text-light mt-4">Accepts Microsoft Word (.docx) documents with taxpayer tables or resident records</div>
-            <input type="file" id="docx-file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;">
-          </div>
-
-          <div id="selected-file-info" style="display:none; margin-top: 16px; padding: 12px 16px; background: #F0FDF4; border: 1px solid #A7F3D0; border-radius: 8px;" class="flex-center">
-            <div style="flex:1;">
-              <span class="fw-600 text-success fs-13">Selected File: </span>
-              <span id="file-name-display" class="fw-500 fs-13">filename.docx</span>
-              <span id="file-size-display" class="fs-11 text-muted ml-auto" style="margin-left: 8px;">(0 KB)</span>
-            </div>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-remove-file">✕ Remove</button>
-          </div>
-
-          <div class="flex gap-10 mt-16">
-            <button type="button" class="btn btn-primary" id="btn-parse-file" disabled>⊕ Import & Parse Word File</button>
-          </div>
-        </div>
-
-        <!-- MODE 2: Paste Text Fallback -->
-        <div id="mode-content-paste" class="card mb-20" style="display:none; padding: 20px;">
-          <div class="flex-center" style="justify-content: space-between; margin-bottom: 10px;">
-            <div class="fw-600 fs-12" style="color: #6B5040;">Example Format:</div>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-load-sample">Load Sample</button>
-          </div>
-
-          <pre style="background: #FFFBF5; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 11px; color: #4A3020; line-height: 1.8; font-family: monospace; margin-bottom: 12px;">Name: Ramesh Patil
-Property ID: GP/2024/001
-Ward: Ward 1
-Amount: 2500
-Phone: 9876543210
-Address: Plot 12, Main Road</pre>
-
-          <textarea id="import-text" class="form-textarea mb-12" style="min-height: 160px; font-family: monospace; font-size: 13px;" placeholder="Paste text from Word file here..."></textarea>
-
-          <div class="flex gap-10">
-            <button type="button" class="btn btn-primary" id="btn-parse-text">⊕ Parse Pasted Text</button>
-            <button type="button" class="btn btn-secondary" id="btn-clear">Clear</button>
-          </div>
-        </div>
-
-        <!-- Parse Result Review Section -->
-        <div id="review-section" style="display:none;">
-          <div class="stat-grid stat-grid-3 mb-20">
-            <div class="stat-card">
-              <div class="stat-value" id="stat-total-parsed">0</div>
-              <div class="stat-label">Total Records Found</div>
-            </div>
-            <div class="stat-card green">
-              <div class="stat-value" id="stat-new-count">0</div>
-              <div class="stat-label">New Records (Ready to Insert)</div>
-            </div>
-            <div class="stat-card amber">
-              <div class="stat-value" id="stat-dup-count">0</div>
-              <div class="stat-label">Duplicates (Needs Review)</div>
-            </div>
-          </div>
-
-          <!-- Tabs -->
-          <div class="tab-bar">
-            <button type="button" class="tab-btn active" id="tab-btn-new">New Records (<span id="tab-new-badge">0</span>)</button>
-            <button type="button" class="tab-btn" id="tab-btn-dup">Duplicate Records (<span id="tab-dup-badge">0</span>)</button>
-          </div>
-
-          <!-- Tab 1: New Records -->
-          <div id="tab-content-new">
-            <div class="card mb-16 flex-center" style="justify-content: space-between; background: var(--success-light); border-color: var(--success-border); padding: 14px 18px;">
-              <div>
-                <div class="fw-600 text-success fs-13">✓ These records have unique Property IDs and are ready to be imported.</div>
-                <div class="fs-12 text-muted mt-2">Duplicates are never auto-inserted.</div>
-              </div>
-              <button type="button" class="btn btn-success" id="btn-confirm-import">✓ Confirm Import All New Records</button>
-            </div>
-            <div id="new-records-list"></div>
-          </div>
-
-          <!-- Tab 2: Duplicate Records -->
-          <div id="tab-content-dup" style="display:none;">
-            <div class="card mb-16" style="background: var(--warn-light); border-color: var(--warn-border); padding: 14px 18px;">
-              <div class="fw-600 text-warn fs-13">⚠ Existing Property IDs Found</div>
-              <div class="fs-12 text-muted mt-2">These records match existing property IDs in your database. You can review and choose to overwrite/merge each one individually.</div>
-            </div>
-            <div id="dup-records-list"></div>
-          </div>
-        </div>
-
-      </div>
-    </main>
-  </div>
-
-  <script src="js/common.js"></script>
-  <script src="js/import_word.js"></script>
+<body style="font-family: sans-serif; padding: 24px; text-align: center;">
+  <p>Redirecting to <a href="add_record.html?mode=import">Add Tax Record (Import File)</a>...</p>
 </body>
 </html>

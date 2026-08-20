@@ -25,6 +25,7 @@ from services import (
     settings_service,
     template_service,
     word_import_service,
+    excel_service,
     reminder_engine,
     messaging_service,
 )
@@ -190,6 +191,32 @@ Amount: 2200
     assert r1_merged["base_amount"] == 2200.0
     print("   merge_resident_import merged record")
 
+    # 4b. Excel Import and Template tests
+    print("\n4b. Testing Excel Import & Template integration...")
+    tpl_res = main.get_excel_import_template()
+    assert tpl_res["success"] is True
+    assert "Taxpayer_Import_Template.xlsx" in tpl_res["filename"]
+    print("   get_excel_import_template verified")
+
+    # Generate real Excel file and parse with main.parse_import_excel
+    import openpyxl
+    wb_test = openpyxl.Workbook()
+    ws_test = wb_test.active
+    ws_test.append(["Taxpayer Name", "Property ID", "Ward", "Phone", "Base Tax Amount", "Address"])
+    ws_test.append(["Excel Test User", "GP/2026/777", "Ward 5", "9900112233", 4200, "Plot 99, North Street"])
+    ws_test.append(["Anil Deshmukh (Merged)", "GP/2026/001", "Ward 1", "9876543210", 2200, "House 12"])
+    xlsx_bio = io.BytesIO()
+    wb_test.save(xlsx_bio)
+    xlsx_b64 = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64.b64encode(xlsx_bio.getvalue()).decode("utf-8")
+
+    excel_res = main.parse_import_excel(xlsx_b64)
+    assert excel_res["success"] is True
+    assert len(excel_res["new"]) == 1
+    assert excel_res["new"][0]["property_id"] == "GP/2026/777"
+    assert len(excel_res["duplicates"]) == 1
+    assert excel_res["duplicates"][0]["property_id"] == "GP/2026/001"
+    print("   parse_import_excel (.xlsx file) verified")
+
     # 5. Reminder Engine and Dedup tests
     print("\n5. Testing Reminder Engine & Dedup...")
     # Preview message
@@ -225,11 +252,17 @@ Amount: 2200
     print(f"   Daily check run summary: {daily_res}")
 
     # 6. Report data tests
-    print("\n6. Testing Report Data queries...")
+    print("\n6. Testing Report Data & Excel Export queries...")
     rep_all = main.get_report_data("all", "", "all")
     assert rep_all["success"] is True
     assert len(rep_all["records"]) == 3
     print(f"   Report all: {len(rep_all['records'])} records, total outstanding={rep_all['total_outstanding']}")
+
+    rep_excel_res = main.generate_report_excel("all", "", "all")
+    assert rep_excel_res["success"] is True
+    assert "Tax_Report_all_All.xlsx" in rep_excel_res["filename"]
+    assert "base64," in rep_excel_res["data"]
+    print(f"   generate_report_excel verified: {rep_excel_res['filename']}")
 
     print("\n=== ALL TESTS PASSED SUCCESSFULLY! ===")
 
