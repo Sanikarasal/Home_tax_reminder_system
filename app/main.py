@@ -170,6 +170,83 @@ def get_resident_by_property_id(property_id: str) -> dict | None:
     return resident_service.get_resident_by_property_id(property_id)
 
 
+# ── Yearly Payment Tracking ───────────────────────────────────────────────────
+
+@eel.expose
+def get_payments_by_year(cycle_id: int) -> dict:
+    """
+    Returns {'paid': [...], 'unpaid': [...]} for a given cycle/FY.
+    Unpaid rows include is_overdue (bool) and carry_forward_fy_label fields.
+    Each row: resident name, property_id, phone, ward, base_amount,
+              penalty_amount, status, paid_date, carry_forward_from_cycle_id,
+              carry_forward_fy_label.
+    """
+    try:
+        return resident_service.get_payments_by_cycle(cycle_id)
+    except Exception as e:
+        log.exception("get_payments_by_year failed")
+        return {"paid": [], "unpaid": [], "error": str(e)}
+
+@eel.expose
+def get_resident_payment_history(resident_id: int) -> list:
+    """
+    Returns all resident_payments rows for a resident, ordered by FY ascending.
+    Each row includes fy_label, due_date, status, base_amount, penalty_amount,
+    paid_date, carry_forward_fy_label.
+    """
+    try:
+        return resident_service.get_resident_payment_history(resident_id)
+    except Exception as e:
+        log.exception("get_resident_payment_history failed")
+        return []
+
+@eel.expose
+def add_yearly_cycle_for_resident(
+    resident_id: int, cycle_id: int, base_amount: float
+) -> dict:
+    """
+    Creates a new resident_payments row for the given resident+cycle.
+    If a prior unpaid/overdue cycle exists, sets carry_forward_from_cycle_id.
+    Returns {'success': True, 'payment': {...}} or {'success': False, 'error': '...'}.
+    """
+    try:
+        return resident_service.add_yearly_cycle(resident_id, cycle_id, base_amount)
+    except Exception as e:
+        log.exception("add_yearly_cycle_for_resident failed")
+        return {"success": False, "error": str(e)}
+
+@eel.expose
+def mark_payment_paid_for_year(
+    resident_id: int, cycle_id: int, paid_date: str = "", penalty_amount: float = 0.0
+) -> dict:
+    """
+    Marks the resident_payments row for (resident_id, cycle_id) as paid.
+    Also syncs the legacy residents.payment_status for reminder engine.
+    Returns the updated payment row.
+    """
+    try:
+        row = resident_service.mark_payment_paid(
+            resident_id, cycle_id, paid_date or None, penalty_amount
+        )
+        return {"success": True, "payment": row}
+    except Exception as e:
+        log.exception("mark_payment_paid_for_year failed")
+        return {"success": False, "error": str(e)}
+
+@eel.expose
+def mark_payment_unpaid_for_year(resident_id: int, cycle_id: int) -> dict:
+    """
+    Reverts the resident_payments row for (resident_id, cycle_id) to unpaid.
+    Also syncs legacy residents.payment_status.
+    """
+    try:
+        row = resident_service.mark_payment_unpaid(resident_id, cycle_id)
+        return {"success": True, "payment": row}
+    except Exception as e:
+        log.exception("mark_payment_unpaid_for_year failed")
+        return {"success": False, "error": str(e)}
+
+
 # ── Templates ─────────────────────────────────────────────────────────────────
 
 @eel.expose

@@ -139,8 +139,67 @@ function loadResident(id) {
     } else {
       setPaid(false);
     }
+
+    // Load payment history for this resident
+    loadPaymentHistory(Number(id));
   });
 }
+
+function loadPaymentHistory(residentId) {
+  eel.get_resident_payment_history(residentId)((history) => {
+    const section = document.getElementById("payment-history-section");
+    const list    = document.getElementById("payment-history-list");
+    const count   = document.getElementById("payment-history-count");
+    if (!section || !list) return;
+
+    const rows = Array.isArray(history) ? history : [];
+    if (!rows.length) {
+      section.style.display = "none";
+      return;
+    }
+
+    section.style.display = "block";
+    count.textContent = rows.length;
+
+    list.innerHTML = rows.map(row => {
+      const isPaid    = row.status === "paid";
+      const isOverdue = row.status === "overdue";
+      const cardClass = isPaid ? "record-card paid" : isOverdue ? "record-card overdue" : "record-card";
+
+      const carryNote = row.carry_forward_from_cycle_id
+        ? `<div style="font-size:11px; color:#B45309; margin-top:4px;">⚠ Carry-forward from FY ${row.carry_forward_fy_label || row.carry_forward_from_cycle_id}</div>`
+        : "";
+
+      const paidLine = isPaid && row.paid_date
+        ? `<span class="text-success" style="font-size:12px;">✓ Paid: ${formatDate(row.paid_date)}</span>` : "";
+
+      const penaltyLine = row.penalty_amount > 0
+        ? `<span style="font-size:12px; color:#DC2626;">Penalty: ${formatCurrency(row.penalty_amount)}</span>` : "";
+
+      return `
+        <div class="${cardClass}" style="margin-bottom:10px;">
+          <div class="record-card-info">
+            <div class="flex-center gap-8">
+              <span class="record-card-name">FY ${row.fy_label}</span>
+              ${statusBadge(row.status)}
+            </div>
+            <div class="record-card-meta">
+              ${paidLine}
+              ${penaltyLine}
+              ${row.due_date ? `<span>Due: ${formatDate(row.due_date)}</span>` : ""}
+            </div>
+            ${carryNote}
+          </div>
+          <div class="record-card-amount">
+            <div class="record-card-total">${formatCurrency(row.base_amount)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  });
+}
+
+
 
 function handleSubmit(e) {
   e.preventDefault();

@@ -70,12 +70,13 @@ function showToast(message, type = "success") {
 // ── Sidebar & Header Injection ────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { id: "dashboard",   label: "Dashboard",        icon: "⊞", href: "dashboard.html" },
-  { id: "tax_records", label: "Tax Records",      icon: "☰", href: "tax_records.html" },
-  { id: "add_record",  label: "Add Tax Record",   icon: "+", href: "add_record.html" },
-  { id: "reminders",   label: "Reminders",        icon: "🔔", href: "reminders.html" },
-  { id: "report",      label: "Tax Report",       icon: "📊", href: "report.html" },
-  { id: "settings",    label: "Settings",         icon: "⚙", href: "settings.html" },
+  { id: "dashboard",      label: "Dashboard",          icon: "⊞", href: "dashboard.html" },
+  { id: "tax_records",    label: "Tax Records",        icon: "☰", href: "tax_records.html" },
+  { id: "yearly_records", label: "Yearly Records",     icon: "📅", href: "yearly_records.html" },
+  { id: "add_record",     label: "Add Tax Record",     icon: "+", href: "add_record.html" },
+  { id: "reminders",      label: "Reminders",          icon: "🔔", href: "reminders.html" },
+  { id: "report",         label: "Tax Report",         icon: "📊", href: "report.html" },
+  { id: "settings",       label: "Settings",           icon: "⚙", href: "settings.html" },
 ];
 
 function renderSidebar(activeId) {

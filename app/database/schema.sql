@@ -74,6 +74,27 @@ CREATE INDEX IF NOT EXISTS idx_log_status         ON reminder_log(status);
 CREATE INDEX IF NOT EXISTS idx_cadence_cycle      ON reminder_cadence(cycle_id);
 CREATE INDEX IF NOT EXISTS idx_cycle_active       ON tax_cycle_settings(is_active);
 
+-- ── Per-Resident Yearly Payment Records ──────────────────────────────────────
+-- One row per resident per financial year (cycle).
+-- UNIQUE(resident_id, cycle_id) is the hard DB-level guard — no duplicate
+-- per-year entries are possible even if the service layer has a bug.
+-- carry_forward_from_cycle_id is nullable; set when a prior FY was unpaid/overdue
+-- so the UI can show "+ overdue from FY X" without re-scanning history.
+CREATE TABLE IF NOT EXISTS resident_payments (
+    id                          INTEGER PRIMARY KEY AUTOINCREMENT,
+    resident_id                 INTEGER NOT NULL REFERENCES residents(id) ON DELETE CASCADE,
+    cycle_id                    INTEGER NOT NULL REFERENCES tax_cycle_settings(id),
+    base_amount                 REAL    NOT NULL,
+    penalty_amount              REAL    NOT NULL DEFAULT 0,
+    status                      TEXT    NOT NULL CHECK(status IN ('paid','unpaid','overdue')),
+    paid_date                   TEXT,
+    carry_forward_from_cycle_id INTEGER REFERENCES tax_cycle_settings(id),
+    created_at                  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(resident_id, cycle_id)
+);
+CREATE INDEX IF NOT EXISTS idx_resident_payments_cycle    ON resident_payments(cycle_id);
+CREATE INDEX IF NOT EXISTS idx_resident_payments_resident ON resident_payments(resident_id);
+
 -- ── App Metadata (GP office name, etc.) ──────────────────────────────────────
 CREATE TABLE IF NOT EXISTS app_settings (
     key   TEXT PRIMARY KEY,

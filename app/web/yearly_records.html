@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Year-wise paid and unpaid tax records for each financial year">
+  <title>Yearly Tax Records — Home Tax Reminder Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="text/javascript" src="/eel.js"></script>
+  <style>
+    /* ── Year Selector Bar ── */
+    .year-selector-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #E5E7EB);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .year-selector-bar label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted, #6B7280);
+      white-space: nowrap;
+    }
+    #year-select {
+      flex: 1;
+      max-width: 200px;
+      padding: 7px 12px;
+      border: 1px solid var(--border, #E5E7EB);
+      border-radius: 7px;
+      font-size: 13px;
+      background: var(--bg, #F9FAFB);
+    }
+    .year-stats {
+      display: flex;
+      gap: 16px;
+      margin-left: auto;
+      font-size: 12px;
+    }
+    .year-stat-chip {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .year-stat-chip.green { background: #D1FAE5; color: #065F46; }
+    .year-stat-chip.red   { background: #FEE2E2; color: #991B1B; }
+    .year-stat-chip.amber { background: #FEF3C7; color: #92400E; }
+
+    /* ── Two-column panel ── */
+    .yearly-panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .yearly-panels { grid-template-columns: 1fr; }
+    }
+    .panel-box {
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #E5E7EB);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .panel-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border, #E5E7EB);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .panel-box-header.paid-header  { background: #F0FDF4; color: #065F46; }
+    .panel-box-header.unpaid-header{ background: #FEF2F2; color: #991B1B; }
+    .panel-body { padding: 10px 0; max-height: 540px; overflow-y: auto; }
+
+    /* ── Payment row cards ── */
+    .py-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light, #F3F4F6);
+      gap: 10px;
+      transition: background 0.15s;
+    }
+    .py-row:last-child { border-bottom: none; }
+    .py-row:hover { background: #F9FAFB; }
+    .py-row-info { flex: 1; min-width: 0; }
+    .py-row-name {
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .py-row-meta {
+      font-size: 11px;
+      color: var(--text-muted, #6B7280);
+      margin-top: 2px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .py-row-amount {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text, #111827);
+      white-space: nowrap;
+    }
+    .py-row-actions { display: flex; gap: 6px; align-items: center; }
+
+    /* ── Overdue badge + carry forward note ── */
+    .badge-overdue {
+      background: #FEE2E2;
+      color: #991B1B;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .carry-forward-note {
+      font-size: 10px;
+      color: #B45309;
+      background: #FEF3C7;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-top: 3px;
+      display: inline-block;
+    }
+    .no-data-msg {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted, #9CA3AF);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <main class="main-area">
+      <header class="page-header">
+        <h1>Yearly Tax Records</h1>
+        <div class="header-right">
+          <div id="header-overdue-alert" class="header-overdue-tag" style="display:none;">⚠ <span id="header-overdue-count">0</span> Overdue</div>
+          <div class="header-meta" id="header-date"></div>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- Cycle / Year Selector -->
+        <div class="year-selector-bar">
+          <label for="year-select">📅 Financial Year:</label>
+          <select id="year-select">
+            <option value="">— Select FY —</option>
+          </select>
+          <div class="year-stats" id="year-stats" style="display:none;">
+            <span class="year-stat-chip green" id="chip-paid">0 Paid</span>
+            <span class="year-stat-chip red"   id="chip-unpaid">0 Unpaid</span>
+            <span class="year-stat-chip amber" id="chip-overdue">0 Overdue</span>
+          </div>
+        </div>
+
+        <!-- Two-panel list -->
+        <div class="yearly-panels" id="yearly-panels" style="display:none;">
+          <!-- Paid Panel -->
+          <div class="panel-box">
+            <div class="panel-box-header paid-header">
+              ✅ Paid
+              <span id="paid-count-badge" class="section-count" style="background:#BBF7D0; color:#065F46;">0</span>
+            </div>
+            <div class="panel-body" id="paid-list">
+              <div class="no-data-msg">Select a year to view records.</div>
+            </div>
+          </div>
+
+          <!-- Unpaid Panel -->
+          <div class="panel-box">
+            <div class="panel-box-header unpaid-header">
+              ❌ Unpaid / Overdue
+              <span id="unpaid-count-badge" class="section-count" style="background:#FEE2E2; color:#991B1B;">0</span>
+            </div>
+            <div class="panel-body" id="unpaid-list">
+              <div class="no-data-msg">Select a year to view records.</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="no-year-msg" class="empty-state" style="display:none;">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">No records for this year</div>
+          <div class="empty-sub">No payment records have been created for this financial year yet.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/yearly_records.js"></script>
+</body>
+</html>
