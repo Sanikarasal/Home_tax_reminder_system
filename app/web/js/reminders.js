@@ -112,6 +112,10 @@ function handleSaveTemplate() {
 
   eel.update_template(currentTemplateType, "mr", mr)(() => {
     showToast("Marathi template updated successfully!");
+    const drawer = document.getElementById("template-editor-drawer");
+    const toggleBtn = document.getElementById("btn-toggle-editor");
+    if (drawer) drawer.style.display = "none";
+    if (toggleBtn) toggleBtn.textContent = "⚙ Edit Reminder Template";
     loadTemplates();
   });
 }
@@ -182,7 +186,6 @@ function renderDueCard(r, cycle) {
         <div class="record-card-actions">
           <button class="btn btn-primary btn-sm" onclick="handleSendNow(${r.id}, '${stage}', false)">📨 Send Reminder</button>
           <button class="btn btn-secondary btn-sm" onclick="handleSendNow(${r.id}, '${stage}', true)" title="Bypass duplicate send check">Force Send</button>
-          <button class="btn btn-success btn-sm" onclick="handleMarkPaid(${r.id})">✓ Paid</button>
         </div>
       </div>
     </div>

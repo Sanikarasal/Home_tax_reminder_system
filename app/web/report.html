@@ -23,6 +23,7 @@
       <header class="page-header">
         <h1>Tax Report</h1>
         <div class="header-right">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-export-excel">📥 Export to Excel (.xlsx)</button>
           <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨 Print / Export PDF</button>
           <div class="header-meta" id="header-date"></div>
         </div>
@@ -92,11 +93,12 @@
                 <th>Taxpayer Name</th>
                 <th>Ward</th>
                 <th>Payment Status</th>
+                <th>Date (Paid / Due Date)</th>
                 <th class="right">Tax Amount</th>
               </tr>
             </thead>
             <tbody id="report-tbody">
-              <tr><td colspan="5" class="text-muted" style="text-align:center; padding: 32px;">Loading statement...</td></tr>
+              <tr><td colspan="6" class="text-muted" style="text-align:center; padding: 32px;">Loading statement...</td></tr>
             </tbody>
           </table>
         </div>

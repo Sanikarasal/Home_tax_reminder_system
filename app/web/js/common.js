@@ -72,8 +72,7 @@ function showToast(message, type = "success") {
 const NAV_ITEMS = [
   { id: "dashboard",   label: "Dashboard",        icon: "⊞", href: "dashboard.html" },
   { id: "tax_records", label: "Tax Records",      icon: "☰", href: "tax_records.html" },
-  { id: "add_record",  label: "Add Record",       icon: "+", href: "add_record.html" },
-  { id: "import_word", label: "Import from Word", icon: "⊕", href: "import_word.html" },
+  { id: "add_record",  label: "Add Tax Record",   icon: "+", href: "add_record.html" },
   { id: "reminders",   label: "Reminders",        icon: "🔔", href: "reminders.html" },
   { id: "report",      label: "Tax Report",       icon: "📊", href: "report.html" },
   { id: "settings",    label: "Settings",         icon: "⚙", href: "settings.html" },

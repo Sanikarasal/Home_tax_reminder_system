@@ -32,6 +32,7 @@ from services import (
     template_service,
     reminder_engine,
     word_import_service,
+    excel_service,
 )
 
 # ── Init ──────────────────────────────────────────────────────────────────────
@@ -279,10 +280,50 @@ def parse_import_docx(base64_content: str) -> dict:
         return {"success": False, "error": str(e)}
 
 @eel.expose
+def parse_import_excel(base64_content: str) -> dict:
+    """
+    Parse uploaded .xlsx / .xls / .csv file content (passed as base64 string from browser)
+    and return new + duplicate records for review.
+    """
+    try:
+        import base64
+        if "," in base64_content:
+            base64_content = base64_content.split(",", 1)[1]
+        file_bytes = base64.b64decode(base64_content)
+        parsed = excel_service.parse_excel_bytes(file_bytes)
+        existing_ids = resident_service.get_all_property_ids()
+        new_records, dup_records = excel_service.check_duplicates(parsed, existing_ids)
+        return {
+            "success": True,
+            "new":        [_clean_rec(r) for r in new_records],
+            "duplicates": [_clean_rec(r) for r in dup_records],
+            "total_parsed": len(parsed),
+        }
+    except Exception as e:
+        log.exception("parse_import_excel failed")
+        return {"success": False, "error": str(e)}
+
+@eel.expose
+def get_excel_import_template() -> dict:
+    """Generates a downloadable sample Excel spreadsheet template."""
+    try:
+        import base64
+        tpl_bytes = excel_service.generate_sample_excel_template()
+        b64 = base64.b64encode(tpl_bytes).decode("utf-8")
+        return {
+            "success": True,
+            "filename": "Taxpayer_Import_Template.xlsx",
+            "data": f"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}",
+        }
+    except Exception as e:
+        log.exception("get_excel_import_template failed")
+        return {"success": False, "error": str(e)}
+
+@eel.expose
 def confirm_import(new_records: list) -> dict:
     """Insert admin-confirmed new records. Never auto-inserts duplicates."""
     try:
-        result = word_import_service.confirm_import(new_records)
+        result = excel_service.confirm_import(new_records)
         return {"success": True, **result}
     except Exception as e:
         log.exception("confirm_import failed")
@@ -292,7 +333,7 @@ def confirm_import(new_records: list) -> dict:
 def merge_resident_import(existing_id: int, new_data: dict) -> dict:
     """Staff-approved merge of duplicate record into existing resident."""
     try:
-        result = word_import_service.merge_resident(existing_id, new_data)
+        result = excel_service.merge_resident(existing_id, new_data)
         # Normalise: always include "success" key alongside "merged" for JS compatibility
         return {"success": result.get("merged", False), **result}
     except Exception as e:
@@ -300,7 +341,7 @@ def merge_resident_import(existing_id: int, new_data: dict) -> dict:
         return {"success": False, "error": str(e)}
 
 
-# ── Report data ───────────────────────────────────────────────────────────────
+# ── Report data & Excel Export ────────────────────────────────────────────────
 
 @eel.expose
 def get_report_data(period: str = "all", period_value: str = "",
@@ -349,6 +390,7 @@ def get_report_data(period: str = "all", period_value: str = "",
 
             filtered.append({
                 **r,
+                "due_date": cycle.get("due_date") if cycle else None,
                 "penalty":  round(penalty, 2),
                 "rebate":   round(rebate,  2),
                 "net_due":  round(net,     2),
@@ -370,6 +412,40 @@ def get_report_data(period: str = "all", period_value: str = "",
         }
     except Exception as e:
         log.exception("get_report_data failed")
+        return {"success": False, "error": str(e)}
+
+@eel.expose
+def generate_report_excel(period: str = "all", period_value: str = "",
+                          status_filter: str = "all") -> dict:
+    """
+    Generates a styled Excel (.xlsx) file of the Tax Report and returns it as a Base64 Data URL.
+    """
+    try:
+        import base64
+        rep = get_report_data(period, period_value, status_filter)
+        if not rep.get("success"):
+            return {"success": False, "error": rep.get("error", "Failed to retrieve report data")}
+
+        app_settings = settings_service.get_all_app_settings()
+        gp_name = app_settings.get("gram_panchayat_name", "Gram Panchayat Office")
+
+        period_lbl = f"{period.capitalize()}" + (f" ({period_value})" if period_value else "")
+        if status_filter != "all":
+            period_lbl += f" - {status_filter.capitalize()} only"
+
+        excel_bytes = excel_service.generate_excel_report(rep, period_label=period_lbl, gp_name=gp_name)
+        b64 = base64.b64encode(excel_bytes).decode("utf-8")
+
+        safe_period = period_value.replace("-", "_") if period_value else "All"
+        filename = f"Tax_Report_{period}_{safe_period}.xlsx"
+
+        return {
+            "success": True,
+            "filename": filename,
+            "data": f"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}",
+        }
+    except Exception as e:
+        log.exception("generate_report_excel failed")
         return {"success": False, "error": str(e)}
 
 

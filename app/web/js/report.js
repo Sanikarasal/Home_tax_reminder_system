@@ -47,8 +47,41 @@ document.addEventListener("DOMContentLoaded", () => {
   if (inputMonth) inputMonth.addEventListener("change", loadReportData);
   if (inputDate) inputDate.addEventListener("change", loadReportData);
 
+  const btnExport = document.getElementById("btn-export-excel");
+  if (btnExport) btnExport.addEventListener("click", handleExportExcel);
+
   loadReportData();
 });
+
+function handleExportExcel() {
+  const pVal = getPeriodValue();
+  const btn = document.getElementById("btn-export-excel");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ Generating Excel...";
+  }
+
+  eel.generate_report_excel(currentPeriod, pVal, currentStatusFilter)((res) => {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "📥 Export to Excel (.xlsx)";
+    }
+
+    if (!res || !res.success || !res.data) {
+      showToast("Excel export failed: " + ((res && res.error) || "Error"), "error");
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = res.data;
+    a.download = res.filename || "Tax_Report.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    showToast(`Excel file ${res.filename} generated successfully!`);
+  });
+}
 
 function setPeriod(p) {
   currentPeriod = p;
@@ -109,18 +142,26 @@ function loadReportData() {
     if (!tbody) return;
 
     if (!recs.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center; padding: 48px;"><div style="font-size:32px;">📊</div><div style="margin-top:8px;">No records match the selected criteria.</div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center; padding: 48px;"><div style="font-size:32px;">📊</div><div style="margin-top:8px;">No records match the selected criteria.</div></td></tr>`;
       return;
     }
 
     tbody.innerHTML = recs.map((r) => {
       const isPaid = r.payment_status === "paid";
+      const dateVal = isPaid ? (r.paid_date || "") : (r.due_date || "");
+      const dateFormatted = dateVal ? formatDate(dateVal) : "—";
+      const dateLabel = isPaid ? "Paid Date" : "Due Date";
+
       return `
         <tr>
           <td class="fw-600">${r.property_id}</td>
           <td class="fw-500">${r.name}</td>
           <td class="text-muted">${r.ward || '—'}</td>
           <td>${statusBadge(r.payment_status)}</td>
+          <td>
+            <div class="fw-600 fs-12 ${isPaid ? 'text-success' : 'text-primary'}">${dateFormatted}</div>
+            <div class="fs-10 text-light">${dateLabel}</div>
+          </td>
           <td class="right fw-700 ${isPaid ? 'text-success' : 'text-danger'}">${formatCurrency(r.base_amount)}</td>
         </tr>
       `;

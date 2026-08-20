@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add/Edit Record — Home Tax Reminder Manager</title>
+  <title>Add Tax Record — Home Tax Reminder Manager</title>
   <link rel="stylesheet" href="css/style.css">
   <script type="text/javascript" src="/eel.js"></script>
 </head>
@@ -12,60 +12,175 @@
 
     <main class="main-area">
       <header class="page-header">
-        <h1 id="page-title">New Tax Record</h1>
+        <h1 id="page-title">Add Tax Record</h1>
         <div class="header-meta" id="header-date"></div>
       </header>
 
-      <div class="page-content" style="max-width: 680px;">
-        <div class="mb-20">
-          <div class="fs-12 text-muted">* Required fields · Tax cycle due date is set globally in Settings → Tax Cycle Configuration</div>
+      <div class="page-content" style="max-width: 820px;">
+        <!-- Top Mode Tabs (Single Record vs Import File) -->
+        <div class="tab-bar mb-20" id="add-mode-tabs">
+          <button type="button" class="tab-btn active" data-add-mode="manual">✍ Single Tax Record</button>
+          <button type="button" class="tab-btn" data-add-mode="import">📊 Import from Excel / File</button>
         </div>
 
-        <form id="record-form">
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">Taxpayer Name *</label>
-              <input type="text" id="name" class="form-input" placeholder="Full name in English or Marathi" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Property ID *</label>
-              <input type="text" id="property_id" class="form-input" placeholder="GP/2024/001" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Ward</label>
-              <input type="text" id="ward" class="form-input" placeholder="Ward 1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Phone Number *</label>
-              <input type="tel" id="phone" class="form-input" placeholder="9876543210" required maxLength="13">
-            </div>
-            <div class="form-group full-width">
-              <label class="form-label">Address</label>
-              <input type="text" id="address" class="form-input" placeholder="Plot No, Street, Village">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Base Tax Amount (₹) *</label>
-              <input type="number" id="base_amount" class="form-input" placeholder="2500" min="0" step="1" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Payment Status</label>
-              <div class="flex gap-10 mt-4">
-                <button type="button" id="btn-unpaid" class="btn btn-primary btn-sm flex-1">✗ Unpaid</button>
-                <button type="button" id="btn-paid" class="btn btn-secondary btn-sm flex-1">✓ Paid</button>
+        <!-- SECTION 1: Manual Single Record Form -->
+        <div id="section-manual-entry">
+          <div class="mb-20">
+            <div class="fs-12 text-muted">* Required fields · Tax cycle due date is set globally in Settings → Tax Cycle Configuration</div>
+          </div>
+
+          <form id="record-form">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Taxpayer Name *</label>
+                <input type="text" id="name" class="form-input" placeholder="Full name in English or Marathi" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Property ID *</label>
+                <input type="text" id="property_id" class="form-input" placeholder="GP/2026/001" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ward</label>
+                <input type="text" id="ward" class="form-input" placeholder="Ward 1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number *</label>
+                <input type="tel" id="phone" class="form-input" placeholder="9876543210" required maxLength="13">
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">Address</label>
+                <input type="text" id="address" class="form-input" placeholder="Plot No, Street, Village">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Base Tax Amount (₹) *</label>
+                <input type="number" id="base_amount" class="form-input" placeholder="2500" min="0" step="1" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Payment Status</label>
+                <div class="flex gap-10 mt-4">
+                  <button type="button" id="btn-unpaid" class="btn btn-primary btn-sm flex-1">✗ Unpaid</button>
+                  <button type="button" id="btn-paid" class="btn btn-secondary btn-sm flex-1">✓ Paid</button>
+                </div>
+              </div>
+              <div class="form-group full-width" id="paid-date-group" style="display:none;">
+                <label class="form-label">Payment Date</label>
+                <input type="date" id="paid_date" class="form-input" style="max-width: 200px;">
+                <div class="fs-11 text-muted mt-4">ⓘ Date when payment was received</div>
               </div>
             </div>
-            <div class="form-group full-width" id="paid-date-group" style="display:none;">
-              <label class="form-label">Payment Date</label>
-              <input type="date" id="paid_date" class="form-input" style="max-width: 200px;">
-              <div class="fs-11 text-muted mt-4">ⓘ Date when payment was received</div>
+
+            <div class="flex gap-10 mt-24">
+              <button type="submit" class="btn btn-primary" id="btn-save">✓ Save Record</button>
+              <a href="tax_records.html" class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- SECTION 2: Import from Excel / File -->
+        <div id="section-import" style="display:none;">
+          <!-- Context Banner -->
+          <div class="card mb-20 flex-center" style="justify-content: space-between; background: #FFFBEB; border-color: #FDE68A; padding: 14px 18px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div class="fw-600 fs-13" style="color: #92400E; margin-bottom: 4px;">📊 Import Taxpayer Records from Excel Spreadsheet</div>
+              <div class="fs-12" style="color: #6B5040;">Upload an <code>.xlsx</code> or <code>.csv</code> spreadsheet with columns for Name, Property ID, Ward, Phone, Address, and Amount.</div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-download-template" style="background:#fff;">📥 Download Excel Template (.xlsx)</button>
+          </div>
+
+          <!-- Import Mode Switcher Tabs -->
+          <div class="tab-bar mb-16" id="import-mode-tabs">
+            <button type="button" class="tab-btn active" data-mode="file">📊 Upload Excel Spreadsheet (.xlsx, .csv)</button>
+            <button type="button" class="tab-btn" data-mode="paste">📋 Paste Data / Text</button>
+          </div>
+
+          <!-- MODE 1: File Upload (.xlsx, .csv) -->
+          <div id="mode-content-file" class="card mb-20" style="padding: 24px;">
+            <div id="drop-zone" style="border: 2px dashed var(--border); border-radius: 12px; padding: 32px 20px; text-align: center; background: #FFFBF5; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 44px; margin-bottom: 8px;">📊</div>
+              <div class="fw-600 fs-14 text-primary">Click to select or drag & drop an Excel file (.xlsx, .xls, .csv)</div>
+              <div class="fs-12 text-light mt-4">Supports Microsoft Excel (.xlsx, .xls) and CSV files with taxpayer records</div>
+              <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" style="display:none;">
+            </div>
+
+            <div id="selected-file-info" style="display:none; margin-top: 16px; padding: 12px 16px; background: #F0FDF4; border: 1px solid #A7F3D0; border-radius: 8px;" class="flex-center">
+              <div style="flex:1;">
+                <span class="fw-600 text-success fs-13">Selected File: </span>
+                <span id="file-name-display" class="fw-500 fs-13">filename.xlsx</span>
+                <span id="file-size-display" class="fs-11 text-muted ml-auto" style="margin-left: 8px;">(0 KB)</span>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-remove-file">✕ Remove</button>
+            </div>
+
+            <div class="flex gap-10 mt-16">
+              <button type="button" class="btn btn-primary" id="btn-parse-file" disabled>📊 Import & Parse Excel File</button>
             </div>
           </div>
 
-          <div class="flex gap-10 mt-24">
-            <button type="submit" class="btn btn-primary" id="btn-save">✓ Save Record</button>
-            <a href="tax_records.html" class="btn btn-secondary">Cancel</a>
+          <!-- MODE 2: Paste Text Fallback -->
+          <div id="mode-content-paste" class="card mb-20" style="display:none; padding: 20px;">
+            <div class="flex-center" style="justify-content: space-between; margin-bottom: 10px;">
+              <div class="fw-600 fs-12" style="color: #6B5040;">Example Format (Tab-separated, CSV, or Key-Value):</div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-load-sample">Load Sample</button>
+            </div>
+
+            <pre style="background: #FFFBF5; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 11px; color: #4A3020; line-height: 1.8; font-family: monospace; margin-bottom: 12px;">Name, Property ID, Ward, Phone, Base Tax Amount, Address
+Ramesh Patil, GP/2026/001, Ward 1, 9876543210, 2500, Plot 12 Main Road
+Sunita Deshmukh, GP/2026/002, Ward 2, 9123456789, 1800, House 45 Shivaji Nagar</pre>
+
+            <textarea id="import-text" class="form-textarea mb-12" style="min-height: 160px; font-family: monospace; font-size: 13px;" placeholder="Paste spreadsheet rows or text here..."></textarea>
+
+            <div class="flex gap-10">
+              <button type="button" class="btn btn-primary" id="btn-parse-text">⊕ Parse Pasted Data</button>
+              <button type="button" class="btn btn-secondary" id="btn-clear">Clear</button>
+            </div>
           </div>
-        </form>
+
+          <!-- Parse Result Review Section -->
+          <div id="review-section" style="display:none;">
+            <div class="stat-grid stat-grid-3 mb-20">
+              <div class="stat-card">
+                <div class="stat-value" id="stat-total-parsed">0</div>
+                <div class="stat-label">Total Records Found</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-value" id="stat-new-count">0</div>
+                <div class="stat-label">New Records (Ready to Insert)</div>
+              </div>
+              <div class="stat-card amber">
+                <div class="stat-value" id="stat-dup-count">0</div>
+                <div class="stat-label">Duplicates (Needs Review)</div>
+              </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tab-bar">
+              <button type="button" class="tab-btn active" id="tab-btn-new">New Records (<span id="tab-new-badge">0</span>)</button>
+              <button type="button" class="tab-btn" id="tab-btn-dup">Duplicate Records (<span id="tab-dup-badge">0</span>)</button>
+            </div>
+
+            <!-- Tab 1: New Records -->
+            <div id="tab-content-new">
+              <div class="card mb-16 flex-center" style="justify-content: space-between; background: var(--success-light); border-color: var(--success-border); padding: 14px 18px;">
+                <div>
+                  <div class="fw-600 text-success fs-13">✓ These records have unique Property IDs and are ready to be imported.</div>
+                  <div class="fs-12 text-muted mt-2">Duplicates are never auto-inserted.</div>
+                </div>
+                <button type="button" class="btn btn-success" id="btn-confirm-import">✓ Confirm Import All New Records</button>
+              </div>
+              <div id="new-records-list"></div>
+            </div>
+
+            <!-- Tab 2: Duplicate Records -->
+            <div id="tab-content-dup" style="display:none;">
+              <div class="card mb-16" style="background: var(--warn-light); border-color: var(--warn-border); padding: 14px 18px;">
+                <div class="fw-600 text-warn fs-13">⚠ Existing Property IDs Found</div>
+                <div class="fs-12 text-muted mt-2">These records match existing property IDs in your database. You can review and choose to overwrite/merge each one individually.</div>
+              </div>
+              <div id="dup-records-list"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
